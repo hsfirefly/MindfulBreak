@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindfulBreak</title>
+
+  <!-- Google Fonts: Playfair Display + DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <!-- Anime.js v4 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/animejs@4.0.2/lib/anime.iife.min.js"></script>
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <!-- =============================================
+       TOP NAVIGATION (hidden on landing page)
+       ============================================= -->
+  <nav class="top-nav" id="top-nav" style="display:none;" aria-label="Main navigation">
+    <span class="top-nav__wordmark">MindfulBreak</span>
+    <ul class="top-nav__links">
+      <li><a href="#" data-nav="dashboard" class="active">Dashboard</a></li>
+      <li><a href="#" data-nav="guided-breaks">Guided Breaks</a></li>
+      <li><a href="#" data-nav="history">History</a></li>
+      <li><a href="#" data-nav="todo">To-Do</a></li>
+      <li><a href="#" data-nav="settings">Settings</a></li>
+    </ul>
+    <div class="top-nav__right">
+      <span class="mode-badge" id="mode-badge">Coding Mode</span>
+      <button class="dark-mode-toggle" id="dark-mode-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <svg class="dm-icon dm-icon--sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+        <svg class="dm-icon dm-icon--moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      </button>
+      <div class="avatar-circle" id="avatar-circle" aria-label="User avatar">M</div>
+    </div>
+  </nav>
+
+  <!-- =============================================
+       PAGES
+       ============================================= -->
+
+  <!-- LANDING / ONBOARDING -->
+  <section class="page" id="page-landing" data-page="landing" role="main" aria-label="Onboarding">
+    <!-- Decorative leaf SVG (bottom-left) -->
+    <svg class="landing-leaf" viewBox="0 0 200 240" aria-hidden="true">
+      <path d="M 100 220 C 20 180 10 80 100 20 C 190 80 180 180 100 220 Z" fill="none" stroke="rgba(74,74,53,0.12)"
+        stroke-width="2" />
+      <path d="M 100 220 L 100 20" stroke="rgba(74,74,53,0.10)" stroke-width="1.5" />
+      <path d="M 100 80 C 60 70 40 90 30 110" stroke="rgba(74,74,53,0.08)" stroke-width="1.5" fill="none" />
+      <path d="M 100 120 C 140 110 160 130 170 150" stroke="rgba(74,74,53,0.08)" stroke-width="1.5" fill="none" />
+    </svg>
+
+    <!-- Decorative figure (bottom-right) -->
+    <svg class="landing-figure" viewBox="0 0 100 120" aria-hidden="true">
+      <circle cx="50" cy="20" r="12" fill="none" stroke="rgba(74,74,53,0.15)" stroke-width="2" />
+      <line x1="50" y1="32" x2="50" y2="75" stroke="rgba(74,74,53,0.15)" stroke-width="2" />
+      <line x1="50" y1="50" x2="25" y2="65" stroke="rgba(74,74,53,0.15)" stroke-width="2" />
+      <line x1="50" y1="50" x2="75" y2="65" stroke="rgba(74,74,53,0.15)" stroke-width="2" />
+      <line x1="50" y1="75" x2="30" y2="100" stroke="rgba(74,74,53,0.15)" stroke-width="2" />
+      <line x1="50" y1="75" x2="70" y2="100" stroke="rgba(74,74,53,0.15)" stroke-width="2" />
+    </svg>
+
+    <!-- Step 1: Activity selector -->
+    <div class="landing-step" id="landing-step-1">
+      <div class="landing-wordmark">MindfulBreak</div>
+      <h1 class="landing-hero">What are you<br>focusing on today?</h1>
+      <p class="landing-subtitle">We'll tailor your breaks based on your activity.</p>
+
+      <div class="activity-cards" id="activity-cards">
+        <div class="activity-card" data-type="coding">
+          <div class="activity-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>
+          </div>
+          <div class="activity-card__name">Coding</div>
+          <div class="activity-card__tags">
+            <span class="tag">Wrist Breaks</span>
+            <span class="tag">Eye Breaks</span>
+          </div>
+        </div>
+        <div class="activity-card" data-type="writing">
+          <div class="activity-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+          </div>
+          <div class="activity-card__name">Writing</div>
+          <div class="activity-card__tags">
+            <span class="tag">Posture</span>
+            <span class="tag">Neck Breaks</span>
+          </div>
+        </div>
+        <div class="activity-card" data-type="studying">
+          <div class="activity-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            </svg>
+          </div>
+          <div class="activity-card__name">Studying</div>
+          <div class="activity-card__tags">
+            <span class="tag tag--active">Eye Breaks</span>
+            <span class="tag tag--active">Breathing</span>
+          </div>
+        </div>
+        <div class="activity-card" data-type="design">
+          <div class="activity-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="13.5" cy="6.5" r=".5" />
+              <circle cx="17.5" cy="10.5" r=".5" />
+              <circle cx="8.5" cy="7.5" r=".5" />
+              <circle cx="6.5" cy="12.5" r=".5" />
+              <path
+                d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+            </svg>
+          </div>
+          <div class="activity-card__name">Design</div>
+          <div class="activity-card__tags">
+            <span class="tag">Eye Breaks</span>
+            <span class="tag">Shoulder</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary landing-cta" id="btn-landing-next-1">Begin Session</button>
+      <div class="landing-step-indicator">STEP 1 OF 3</div>
+    </div>
+
+    <!-- Step 2: Timer preferences -->
+    <div class="landing-step" id="landing-step-2" style="display:none;">
+      <div class="landing-wordmark">MindfulBreak</div>
+      <h1 class="landing-hero" style="font-size:clamp(1.75rem,4vw,2.5rem);">Set your focus rhythm</h1>
+      <p class="landing-subtitle">Customize your Pomodoro intervals.</p>
+
+      <div class="card landing-timer-card">
+        <div class="settings-slider-row">
+          <span class="settings-slider-label">Work Session</span>
+          <input type="range" class="settings-slider" id="onboard-slider-work" min="5" max="60" step="5" value="25">
+          <span class="settings-slider-value" id="onboard-val-work">25 min</span>
+        </div>
+        <div class="settings-slider-row">
+          <span class="settings-slider-label">Short Break</span>
+          <input type="range" class="settings-slider" id="onboard-slider-short" min="1" max="15" step="1" value="5">
+          <span class="settings-slider-value" id="onboard-val-short">5 min</span>
+        </div>
+        <div class="settings-slider-row">
+          <span class="settings-slider-label">Long Break</span>
+          <input type="range" class="settings-slider" id="onboard-slider-long" min="10" max="30" step="5" value="15">
+          <span class="settings-slider-value" id="onboard-val-long">15 min</span>
+        </div>
+      </div>
+
+      <button class="btn-primary landing-cta" id="btn-landing-next-2">Continue</button>
+      <div class="landing-step-indicator">STEP 2 OF 3</div>
+    </div>
+
+    <!-- Step 3: Milo intro + finish -->
+    <div class="landing-step" id="landing-step-3" style="display:none;">
+      <div class="landing-wordmark">MindfulBreak</div>
+      <h1 class="landing-hero" style="font-size:clamp(1.75rem,4vw,2.5rem);">Meet Milo~</h1>
+      <p class="landing-subtitle">Your wellness companion. He'll keep you healthy while you focus.</p>
+
+      <!-- Mini Milo preview -->
+      <div class="landing-milo-preview">
+        <svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg" style="width:120px;height:150px;overflow:visible;"
+          aria-label="Milo the cat">
+          <path d="M 108 155 Q 140 140 145 115 Q 148 95 130 90" fill="none" stroke="var(--milo-body-color)"
+            stroke-width="12" stroke-linecap="round"
+            style="animation:milo-tail-sway 3s ease-in-out infinite;transform-origin:108px 155px;" />
+          <g style="animation:milo-bounce 1.5s ease-in-out infinite;">
+            <ellipse cx="80" cy="140" rx="45" ry="38" fill="var(--milo-body-color)" />
+            <ellipse cx="80" cy="148" rx="28" ry="24" fill="var(--milo-belly-color)" />
+            <ellipse cx="52" cy="172" rx="14" ry="10" fill="var(--milo-body-color)" />
+            <ellipse cx="108" cy="172" rx="14" ry="10" fill="var(--milo-body-color)" />
+          </g>
+          <g>
+            <polygon points="42,52 58,20 72,52" fill="var(--milo-body-color)" />
+            <polygon points="88,52 102,20 118,52" fill="var(--milo-body-color)" />
+            <polygon points="47,50 58,28 69,50" fill="var(--milo-ear-inner)" />
+            <polygon points="91,50 102,28 113,50" fill="var(--milo-ear-inner)" />
+            <circle cx="80" cy="85" r="42" fill="var(--milo-body-color)" />
+            <circle cx="65" cy="82" r="8" fill="white" />
+            <circle cx="65" cy="82" r="4" fill="#2C2A24" />
+            <circle cx="95" cy="82" r="8" fill="white" />
+            <circle cx="95" cy="82" r="4" fill="#2C2A24" />
+            <polygon points="77,93 83,93 80,97" fill="#FFB6C1" />
+            <line x1="38" y1="88" x2="62" y2="91" stroke="var(--text-muted)" stroke-width="1.5"
+              stroke-linecap="round" />
+            <line x1="36" y1="93" x2="62" y2="93" stroke="var(--text-muted)" stroke-width="1.5"
+              stroke-linecap="round" />
+            <line x1="38" y1="98" x2="62" y2="95" stroke="var(--text-muted)" stroke-width="1.5"
+              stroke-linecap="round" />
+            <line x1="98" y1="91" x2="122" y2="88" stroke="var(--text-muted)" stroke-width="1.5"
+              stroke-linecap="round" />
+            <line x1="98" y1="93" x2="124" y2="93" stroke="var(--text-muted)" stroke-width="1.5"
+              stroke-linecap="round" />
+            <line x1="98" y1="95" x2="122" y2="98" stroke="var(--text-muted)" stroke-width="1.5"
+              stroke-linecap="round" />
+          </g>
+        </svg>
+      </div>
+
+      <button class="btn-primary landing-cta" id="btn-landing-finish">Let's get started!</button>
+      <div class="landing-step-indicator">STEP 3 OF 3</div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section class="page" id="page-dashboard" data-page="dashboard" role="main" aria-label="Dashboard">
+    <div class="dashboard-top">
+      <!-- Left: timer ring -->
+      <div class="timer-section">
+        <div class="timer-ring-wrapper">
+          <svg class="timer-ring" viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="timer-ring__bg" cx="100" cy="100" r="80" />
+            <circle class="timer-ring__progress" id="timer-ring-progress" cx="100" cy="100" r="80" />
+          </svg>
+          <div class="timer-display">
+            <span class="timer-time" id="timer-time">25:00</span>
+            <span class="timer-mode-label text-label" id="timer-mode-label">Deep Focus Session</span>
+          </div>
+        </div>
+        <div class="timer-controls">
+          <button class="btn-primary" id="btn-start-pause">Start Session</button>
+          <button class="btn-ghost" id="btn-reset">Reset</button>
+        </div>
+        <!-- Session Progress Tracker -->
+        <div class="session-progress-tracker" id="session-progress-tracker">
+          <div class="session-progress-header">
+            <span class="session-progress-label text-label">SESSION PROGRESS</span>
+            <span class="session-progress-count" id="dashboard-session-count">0 / 4</span>
+          </div>
+          <div class="session-progress-dots" id="dashboard-session-dots">
+            <!-- JS-rendered dots -->
+          </div>
+          <div class="session-progress-bar-track">
+            <div class="session-progress-bar-fill" id="dashboard-session-bar"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Right: Milo + speech bubble placeholder -->
+      <div class="milo-section" id="milo-section">
+        <div class="milo-speech-bubble" id="milo-speech-bubble">
+          <p class="milo-quote"><em>"Psst! Aku juga lagi fokus nih..."</em></p>
+        </div>
+        <div class="milo-container milo--happy" id="milo-container">
+          <!-- ZZZ bubbles (tired state) -->
+          <div class="milo-zzz" aria-hidden="true">
+            <span class="zzz-1">z</span>
+            <span class="zzz-2">z</span>
+            <span class="zzz-3">Z</span>
+          </div>
+          <!-- Warning icon (exhausted state) -->
+          <div class="milo-warning" aria-hidden="true">!!!</div>
+          <!-- Stars (celebrating state) -->
+          <div class="milo-stars" aria-hidden="true">
+            <span class="star" style="--tx:30px;--ty:-40px">*</span>
+            <span class="star" style="--tx:-35px;--ty:-35px">*</span>
+            <span class="star" style="--tx:40px;--ty:-20px">"?</span>
+            <span class="star" style="--tx:-30px;--ty:-50px">*</span>
+          </div>
+          <!-- Milo SVG -->
+          <svg class="milo-svg" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg" aria-label="Milo the cat">
+            <!-- Tail -->
+            <path class="milo-tail" d="M 108 155 Q 140 140 145 115 Q 148 95 130 90" fill="none"
+              stroke="var(--milo-body-color)" stroke-width="12" stroke-linecap="round" />
+            <!-- Body group (bounces/breathes) -->
+            <g class="milo-body-group">
+              <!-- Body -->
+              <ellipse class="milo-body" cx="80" cy="140" rx="45" ry="38" fill="var(--milo-body-color)" />
+              <!-- Belly -->
+              <ellipse class="milo-belly" cx="80" cy="148" rx="28" ry="24" fill="var(--milo-belly-color)" />
+              <!-- Paws -->
+              <ellipse class="milo-paw" cx="52" cy="172" rx="14" ry="10" fill="var(--milo-body-color)" />
+              <ellipse class="milo-paw" cx="108" cy="172" rx="14" ry="10" fill="var(--milo-body-color)" />
+            </g>
+            <!-- Head group -->
+            <g class="milo-head-group">
+              <!-- Ears (behind head) -->
+              <polygon class="milo-ear" points="42,52 58,20 72,52" fill="var(--milo-body-color)" />
+              <polygon class="milo-ear" points="88,52 102,20 118,52" fill="var(--milo-body-color)" />
+              <polygon class="milo-ear-inner" points="47,50 58,28 69,50" fill="var(--milo-ear-inner)" />
+              <polygon class="milo-ear-inner" points="91,50 102,28 113,50" fill="var(--milo-ear-inner)" />
+              <!-- Head -->
+              <circle class="milo-head" cx="80" cy="85" r="42" fill="var(--milo-body-color)" />
+              <!-- Eyes -->
+              <circle cx="65" cy="82" r="8" fill="white" />
+              <circle class="milo-pupil" cx="65" cy="82" r="4" fill="#2C2A24" />
+              <circle cx="95" cy="82" r="8" fill="white" />
+              <circle class="milo-pupil" cx="95" cy="82" r="4" fill="#2C2A24" />
+              <!-- Eyelids (for blinking/tired/exhausted) -->
+              <rect class="milo-eyelid" x="57" y="74" width="16" height="8" fill="var(--milo-body-color)" rx="2" />
+              <rect class="milo-eyelid" x="87" y="74" width="16" height="8" fill="var(--milo-body-color)" rx="2" />
+              <!-- Nose -->
+              <polygon class="milo-nose" points="77,93 83,93 80,97" fill="#FFB6C1" />
+              <!-- Whiskers left -->
+              <line x1="38" y1="88" x2="62" y2="91" stroke="var(--text-muted)" stroke-width="1.5"
+                stroke-linecap="round" />
+              <line x1="36" y1="93" x2="62" y2="93" stroke="var(--text-muted)" stroke-width="1.5"
+                stroke-linecap="round" />
+              <line x1="38" y1="98" x2="62" y2="95" stroke="var(--text-muted)" stroke-width="1.5"
+                stroke-linecap="round" />
+              <!-- Whiskers right -->
+              <line x1="98" y1="91" x2="122" y2="88" stroke="var(--text-muted)" stroke-width="1.5"
+                stroke-linecap="round" />
+              <line x1="98" y1="93" x2="124" y2="93" stroke="var(--text-muted)" stroke-width="1.5"
+                stroke-linecap="round" />
+              <line x1="98" y1="95" x2="122" y2="98" stroke="var(--text-muted)" stroke-width="1.5"
+                stroke-linecap="round" />
+            </g>
+          </svg>
+          <p class="milo-name" id="milo-name">Milo is focused</p>
+          <p class="milo-subtitle text-label">Guardian of your focus</p>
+        </div>
+      </div>
+    </div>
+    <!-- Dashboard cards grid -->
+    <div class="dashboard-cards" id="dashboard-cards">
+      <div class="dashboard-cards-grid">
+        <!-- Energy Reserve card -->
+        <div class="card energy-reserve-card">
+          <h3 class="text-card-title">Energy Reserve</h3>
+          <p class="text-body" style="margin-top:4px;font-size:0.8125rem;">Reflection on your mental battery</p>
+          <!-- Bar chart: Mon-Fri bars showing burnout score per day -->
+          <div class="energy-bars" id="energy-bars">
+            <!-- JS-rendered bars -->
+          </div>
+          <!-- Current score indicator -->
+          <div class="burnout-score-row">
+            <span class="text-label">Current Level</span>
+            <span class="burnout-score-value" id="burnout-score-value">0</span>
+          </div>
+          <div class="burnout-gauge-track">
+            <div class="burnout-gauge-fill" id="burnout-gauge-fill"></div>
+          </div>
+        </div>
+        <!-- Focus Insights -->
+        <div class="card focus-insights-card">
+          <h3 class="text-card-title">Focus Insights</h3>
+          <p class="text-body" style="margin-top:4px;font-size:0.8125rem;">Your productivity at a glance</p>
+          <div class="focus-insights-grid">
+            <div class="focus-insight-item">
+              <div class="focus-insight-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <div class="focus-insight-label">Avg Duration</div>
+              <div class="focus-insight-value" id="insight-avg-duration">0m</div>
+            </div>
+            <div class="focus-insight-item">
+              <div class="focus-insight-icon focus-insight-icon--teal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+              </div>
+              <div class="focus-insight-label">Streak</div>
+              <div class="focus-insight-value" id="insight-streak">0 days</div>
+            </div>
+            <div class="focus-insight-item">
+              <div class="focus-insight-icon focus-insight-icon--blush">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              </div>
+              <div class="focus-insight-label">Sessions Today</div>
+              <div class="focus-insight-value" id="insight-sessions-today">0</div>
+            </div>
+            <div class="focus-insight-item">
+              <div class="focus-insight-icon focus-insight-icon--warm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </div>
+              <div class="focus-insight-label">Mood</div>
+              <div class="focus-insight-value" id="insight-mood">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Focus Growth Heatmap -->
+      <div class="focus-growth-section">
+        <div class="focus-growth-header">
+          <div class="focus-growth-title-area">
+            <h3 class="focus-growth-title">Focus Growth</h3>
+            <p class="focus-growth-subtitle">A year of <em>mindful</em> moments and steady intention.</p>
+          </div>
+          <div class="focus-growth-legend">
+            <span class="focus-growth-legend-label">LESS</span>
+            <span class="focus-growth-legend-cell" data-level="0"></span>
+            <span class="focus-growth-legend-cell" data-level="1"></span>
+            <span class="focus-growth-legend-cell" data-level="2"></span>
+            <span class="focus-growth-legend-cell" data-level="3"></span>
+            <span class="focus-growth-legend-cell" data-level="4"></span>
+            <span class="focus-growth-legend-label">MORE</span>
+          </div>
+        </div>
+        <div class="focus-growth-graph-wrap">
+          <div class="focus-growth-graph" id="focus-growth-graph">
+            <!-- JS-rendered cells -->
+          </div>
+          <div class="focus-growth-months" id="focus-growth-months">
+            <!-- JS-rendered month labels -->
+          </div>
+        </div>
+        <!-- Floating tooltip overlay -->
+        <div class="focus-growth-tooltip" id="focus-growth-tooltip"></div>
+      </div>
+
+      <!-- Nurture Your Focus section -->
+      <div class="nurture-section">
+        <h3 class="text-card-title" style="margin-bottom:16px;">Nurture Your Focus</h3>
+        <p class="text-body" style="margin-bottom:20px;font-size:0.8125rem;">Small rituals that ground your spirit and
+          clear your mind.</p>
+        <div class="nurture-cards">
+          <div class="card nurture-card" data-break="eye">
+            <div class="nurture-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg></div>
+            <div class="nurture-card__title">Eye Care</div>
+            <div class="nurture-card__desc">The 20-20-20 rule for digital strain.</div>
+            <span class="tag" style="margin-top:8px;">2 MIN</span>
+          </div>
+          <div class="card nurture-card" data-break="hydration">
+            <div class="nurture-card__icon nurture-card__icon--teal"><svg viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+              </svg></div>
+            <div class="nurture-card__title">Hydration</div>
+            <div class="nurture-card__desc">A moment of clarity with every sip.</div>
+            <span class="tag" style="margin-top:8px;">1 MIN</span>
+          </div>
+          <div class="card nurture-card" data-break="stretch">
+            <div class="nurture-card__icon nurture-card__icon--blush"><svg viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                <line x1="6" y1="1" x2="6" y2="4" />
+                <line x1="10" y1="1" x2="10" y2="4" />
+                <line x1="14" y1="1" x2="14" y2="4" />
+              </svg></div>
+            <div class="nurture-card__title">Stretch</div>
+            <div class="nurture-card__desc">Release the weight of the day.</div>
+            <span class="tag" style="margin-top:8px;">5 MIN</span>
+          </div>
+          <div class="card nurture-card" data-break="breathing">
+            <div class="nurture-card__icon nurture-card__icon--warm"><svg viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path
+                  d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" />
+              </svg></div>
+            <div class="nurture-card__title">Breathe</div>
+            <div class="nurture-card__desc">Box breathing for immediate calm.</div>
+            <span class="tag" style="margin-top:8px;">3 MIN</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =============================================
+       URGENT BURNOUT POPUP
+       ============================================= -->
+  <div class="urgent-popup-overlay" id="urgent-popup-overlay" role="dialog" aria-modal="true"
+    aria-labelledby="urgent-popup-msg">
+    <div class="urgent-popup">
+      <div class="urgent-popup__emoji" aria-hidden="true">!</div>
+      <p class="urgent-popup__message" id="urgent-popup-msg">
+        PLEASE take a break! I'm really worried about you!
+      </p>
+      <div class="urgent-popup__actions">
+        <button class="btn-primary" id="btn-urgent-take-break">Take a Break Now</button>
+        <button class="btn-ghost" id="btn-urgent-dismiss">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GUIDED BREAKS -->
+  <section class="page" id="page-guided-breaks" data-page="guided-breaks" role="main" aria-label="Guided Breaks">
+
+    <!-- Break Selector -->
+    <div class="gb-selector" id="gb-selector">
+      <div class="gb-selector__header">
+        <h1 class="text-section-heading">Guided Breaks</h1>
+        <p class="text-body">Choose a break ritual to restore your focus and wellbeing.</p>
+      </div>
+      <div class="gb-selector__grid">
+        <div class="gb-card" data-break="eye">
+          <div class="gb-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg></div>
+          <div class="gb-card__label text-label">Eye Care</div>
+          <h3 class="gb-card__title">The Eye Sanctuary</h3>
+          <p class="gb-card__desc">The 20-20-20 rule to reduce digital eye strain.</p>
+          <span class="tag">2 MIN</span>
+        </div>
+        <div class="gb-card" data-break="hydration">
+          <div class="gb-card__icon gb-card__icon--teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5" stroke-linecap="round">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+            </svg></div>
+          <div class="gb-card__label text-label">Hydration</div>
+          <h3 class="gb-card__title">Nurture Your Essence</h3>
+          <p class="gb-card__desc">One slow sip at a time. Water is the silent gardener of the mind.</p>
+          <span class="tag">1 MIN</span>
+        </div>
+        <div class="gb-card" data-break="breathing">
+          <div class="gb-card__icon gb-card__icon--blush"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5" stroke-linecap="round">
+              <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" />
+            </svg></div>
+          <div class="gb-card__label text-label">Breathing</div>
+          <h3 class="gb-card__title">Unwind and Recenter</h3>
+          <p class="gb-card__desc">Follow the 4-7-8 rhythm to settle your nervous system.</p>
+          <span class="tag">5 MIN</span>
+        </div>
+        <div class="gb-card" data-break="stretch">
+          <div class="gb-card__icon gb-card__icon--warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5" stroke-linecap="round">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+              <line x1="6" y1="1" x2="6" y2="4" />
+              <line x1="10" y1="1" x2="10" y2="4" />
+              <line x1="14" y1="1" x2="14" y2="4" />
+            </svg></div>
+          <div class="gb-card__label text-label">Stretch</div>
+          <h3 class="gb-card__title">Break Ritual</h3>
+          <p class="gb-card__desc">Gentle movement to release tension stored from the day's posture.</p>
+          <span class="tag">5 MIN</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Eye Care Break View -->
+    <div class="gb-view" id="gb-view-eye" style="display:none;">
+      <div class="gb-view__inner">
+        <div class="gb-view__left">
+          <div class="gb-eye-animation">
+            <div class="gb-eye-orbit">
+              <div class="gb-eye-dot" id="gb-eye-dot"></div>
+            </div>
+            <p class="gb-eye-label">Follow the circle</p>
+            <p class="text-label" style="color:var(--text-muted);margin-top:4px;">SOFT FOCUS NATURAL GAZE</p>
+          </div>
+        </div>
+        <div class="gb-view__right">
+          <p class="text-label" style="color:var(--accent-sage);margin-bottom:8px;">GUIDED WELLNESS</p>
+          <h2 class="gb-view__title">The Eye Sanctuary</h2>
+          <p class="gb-view__desc">Adopting the <em>20-20-20 rule</em> to reduce digital eye strain. Every 20 minutes,
+            look 20 feet away for 20 seconds.</p>
+          <div class="gb-timer-ring-wrap">
+            <svg class="gb-timer-ring" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--bg-muted)" stroke-width="6" />
+              <circle id="gb-eye-ring" cx="60" cy="60" r="50" fill="none" stroke="var(--accent-olive)" stroke-width="6"
+                stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16"
+                style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s linear;" />
+            </svg>
+            <div class="gb-timer-center">
+              <span class="gb-timer-num" id="gb-eye-count">20</span>
+              <span class="text-label" style="color:var(--text-muted);">SECONDS</span>
+            </div>
+          </div>
+          <div class="gb-view__actions">
+            <button class="btn-primary" id="btn-eye-start">&#9654; Begin Eye Break</button>
+            <button class="btn-ghost" id="btn-eye-reset" style="padding:12px 24px;">&#8635; Reset Cycle</button>
+          </div>
+          <div class="gb-info-cards">
+            <div class="gb-info-card">
+              <span class="gb-info-card__icon"></span>
+              <div>
+                <div class="gb-info-card__title">Blink Reminder</div>
+                <div class="gb-info-card__desc">We blink 66% less when looking at screens. Blink 10 times now.</div>
+              </div>
+            </div>
+            <div class="gb-info-card">
+              <span class="gb-info-card__icon"></span>
+              <div>
+                <div class="gb-info-card__title">Distance Focus</div>
+                <div class="gb-info-card__desc">Find an object at least 20 feet away. Let your eye muscles relax.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="gb-back-btn" id="btn-eye-back">&#8592; Back to Breaks</button>
+    </div>
+
+    <!-- Hydration Break View -->
+    <div class="gb-view" id="gb-view-hydration" style="display:none;">
+      <div class="gb-view__inner">
+        <div class="gb-view__left">
+          <div class="gb-glass-wrap">
+            <!-- SVG Glass with animated water fill -->
+            <svg class="gb-glass-svg" viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg">
+              <!-- Glass body -->
+              <defs>
+                <clipPath id="glass-clip">
+                  <path d="M 18 20 L 10 185 Q 10 192 18 192 L 102 192 Q 110 192 110 185 L 102 20 Z" />
+                </clipPath>
+              </defs>
+              <!-- Water fill (clipped to glass shape) -->
+              <g clip-path="url(#glass-clip)">
+                <rect id="gb-water-rect" x="10" y="192" width="100" height="0" fill="url(#waterGrad)"
+                  style="transition: y 0.8s ease, height 0.8s ease;" />
+                <!-- Water surface wave -->
+                <path id="gb-water-wave" d="M 10 192 Q 35 188 60 192 Q 85 196 110 192 L 110 200 L 10 200 Z"
+                  fill="url(#waterGrad)" opacity="0.6" style="transition: d 0.8s ease;" />
+              </g>
+              <!-- Glass outline -->
+              <path d="M 18 20 L 10 185 Q 10 192 18 192 L 102 192 Q 110 192 110 185 L 102 20 Z" fill="none"
+                stroke="var(--accent-sage)" stroke-width="3" stroke-linejoin="round" />
+              <!-- Glass rim -->
+              <line x1="14" y1="20" x2="106" y2="20" stroke="var(--accent-sage)" stroke-width="3"
+                stroke-linecap="round" />
+              <!-- Percentage text -->
+              <text id="gb-glass-pct" x="60" y="115" text-anchor="middle" font-family="'Playfair Display', serif"
+                font-size="22" fill="var(--text-primary)">0%</text>
+              <!-- Shine highlight -->
+              <line x1="28" y1="35" x2="22" y2="175" stroke="white" stroke-width="4" stroke-linecap="round"
+                opacity="0.5" />
+              <defs>
+                <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#8AB4B4" />
+                  <stop offset="100%" stop-color="#5B8A8A" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <p class="gb-eye-label" style="margin-top:16px;">Every drop matters</p>
+          </div>
+        </div>
+        <div class="gb-view__right">
+          <p class="text-label" style="color:var(--accent-sage);margin-bottom:8px;">HYDRATION</p>
+          <h2 class="gb-view__title">Nurture Your Essence,<br><em>one slow sip</em> at a time.</h2>
+          <p class="gb-view__desc">Water is the silent gardener of the mind. Today's goal is a rhythmic flow of <span
+              id="gb-water-goal-display">8</span> glasses.</p>
+          <div class="gb-water-status">
+            <div class="gb-water-status__label text-label">Daily Status</div>
+            <div class="gb-water-status__count"><span id="gb-water-current">0</span> of <span
+                id="gb-water-goal">8</span> glasses</div>
+            <div class="gb-water-progress-track">
+              <div class="gb-water-progress-fill" id="gb-water-progress"></div>
+            </div>
+            <div class="gb-water-icons" id="gb-water-icons"></div>
+          </div>
+          <button class="btn-primary" id="btn-log-glass" style="margin-top:20px;width:100%;"> Log a Glass</button>
+          <div class="gb-info-card" style="margin-top:16px;">
+            <span class="gb-info-card__icon"></span>
+            <div>
+              <div class="gb-info-card__title">Why Hydrate?</div>
+              <div class="gb-info-card__desc">Adequate hydration improves cognitive function by 14% and helps maintain
+                the natural clarity of your thoughts.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="gb-back-btn" id="btn-hydration-back">&#8592; Back to Breaks</button>
+    </div>
+
+    <!-- Breathing Break View -->
+    <div class="gb-view" id="gb-view-breathing" style="display:none;">
+      <div class="gb-view__inner gb-view__inner--centered">
+        <p class="text-label" style="color:var(--accent-sage);margin-bottom:8px;">BREATHING</p>
+        <h2 class="gb-view__title" style="text-align:center;">Unwind and Recenter</h2>
+        <p class="gb-view__desc" style="text-align:center;max-width:420px;">Follow the 4-7-8 rhythm to settle your
+          nervous system. Let the visual guide lead your pace.</p>
+        <div class="gb-breath-circle-wrap">
+          <div class="gb-breath-circle" id="gb-breath-circle"></div>
+          <div class="gb-breath-label" id="gb-breath-label">Press Start</div>
+        </div>
+        <div class="gb-breath-info-row">
+          <div class="card gb-breath-info-card">
+            <div class="text-label" style="color:var(--text-muted);margin-bottom:4px;">SESSION DURATION</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.25rem;">5:00 Minutes</div>
+          </div>
+          <div class="card gb-breath-info-card">
+            <div class="text-label" style="color:var(--text-muted);margin-bottom:4px;">PATTERN</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.25rem;">4-7-8</div>
+          </div>
+          <div class="card gb-breath-info-card">
+            <div class="text-label" style="color:var(--text-muted);margin-bottom:4px;">CYCLES</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.25rem;" id="gb-breath-cycles">0 / 4</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:8px;">
+          <button class="btn-primary" id="btn-breath-start">&#9654; Start Breathing</button>
+          <button class="btn-ghost" id="btn-breath-stop" style="padding:12px 24px;">&#9632; Stop</button>
+        </div>
+      </div>
+      <button class="gb-back-btn" id="btn-breathing-back">&#8592; Back to Breaks</button>
+    </div>
+
+    <!-- Stretch Break View -->
+    <div class="gb-view" id="gb-view-stretch" style="display:none;">
+      <div class="gb-view__inner">
+        <div class="gb-view__left">
+          <div class="gb-stretch-anim-wrap">
+            <div class="gb-stretch-figure" id="gb-stretch-figure">
+              <div class="gb-stick-head"></div>
+              <div class="gb-stick-body"></div>
+              <div class="gb-stick-arm gb-stick-arm--left" id="gb-arm-left"></div>
+              <div class="gb-stick-arm gb-stick-arm--right" id="gb-arm-right"></div>
+              <div class="gb-stick-leg gb-stick-leg--left"></div>
+              <div class="gb-stick-leg gb-stick-leg--right"></div>
+            </div>
+            <div class="gb-stretch-badge">ACTIVE MOTION</div>
+          </div>
+        </div>
+        <div class="gb-view__right">
+          <div class="gb-breadcrumb text-label">BREAK RITUAL > <span id="gb-stretch-crumb">NECK ROLLS</span></div>
+          <h2 class="gb-stretch-title" id="gb-stretch-title">Neck<br><em>Rolls</em></h2>
+          <p class="gb-view__desc" id="gb-stretch-desc">Gently roll your neck in a circular motion. Release the tension
+            stored from the day's posture.</p>
+          <div class="gb-stretch-timer">
+            <span class="gb-stretch-num" id="gb-stretch-count">30</span>
+            <span class="text-label" style="color:var(--text-muted);">SECONDS LEFT</span>
+          </div>
+          <div class="gb-stretch-progress-row">
+            <span class="text-label">SESSION PROGRESS</span>
+            <span class="text-label" id="gb-stretch-progress-label">1 of 4</span>
+          </div>
+          <div class="gb-stretch-progress-bar">
+            <div class="gb-stretch-progress-fill" id="gb-stretch-progress-fill"></div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:20px;">
+            <button class="btn-primary" id="btn-stretch-pause">&#9646;&#9646; Pause Break</button>
+            <button class="btn-ghost" id="btn-stretch-skip" style="padding:12px 24px;">Skip Stretch &#8594;</button>
+          </div>
+        </div>
+      </div>
+      <button class="gb-back-btn" id="btn-stretch-back">&#8592; Back to Breaks</button>
+    </div>
+
+  </section>
+
+  <!-- HISTORY -->
+  <section class="page" id="page-history" data-page="history" role="main" aria-label="History">
+    <div class="history-page">
+      <div class="history-header">
+        <h1 class="text-section-heading">Wellness Reflection</h1>
+        <p class="text-body">Tracing the rhythms of your attention and rest. A detailed perspective on your journey
+          toward a balanced digital life.</p>
+      </div>
+
+      <!-- 3 stat summary cards -->
+      <div class="history-stats-row">
+        <div class="card history-stat-card">
+          <div class="history-stat-card__label text-label">Focus Hours</div>
+          <div class="history-stat-card__value" id="stat-focus-hours">0</div>
+          <div class="history-stat-card__delta" id="stat-focus-delta">Today</div>
+        </div>
+        <div class="card history-stat-card history-stat-card--featured">
+          <div class="history-stat-card__label text-label">Total Breaks</div>
+          <div class="history-stat-card__value" id="stat-total-breaks">0</div>
+          <div class="history-stat-card__delta">Consistent rhythm maintained</div>
+        </div>
+        <div class="card history-stat-card">
+          <div class="history-stat-card__label text-label">Hydration</div>
+          <div class="history-stat-card__value" id="stat-hydration">0L</div>
+          <div class="history-stat-card__delta" id="stat-hydration-pct">0% of daily goal</div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="history-charts-row">
+        <div class="card history-chart-card">
+          <div class="history-chart-header">
+            <h3 class="text-card-title">Burnout Trends</h3>
+            <span class="tag">Burnout Score</span>
+          </div>
+          <canvas id="burnout-chart" height="160"></canvas>
+        </div>
+        <div class="card history-chart-card">
+          <div class="history-chart-header">
+            <h3 class="text-card-title">Break Distribution</h3>
+          </div>
+          <div class="break-dist-wrapper">
+            <canvas id="break-dist-chart" width="140" height="140"></canvas>
+            <div class="break-dist-total" id="break-dist-total">0<br><span>total</span></div>
+          </div>
+          <div class="break-dist-legend" id="break-dist-legend"></div>
+        </div>
+      </div>
+
+      <!-- Session Chronicles -->
+      <div class="history-chronicles">
+        <div class="history-chronicles__header">
+          <div>
+            <h3 class="text-card-title">Session Chronicles</h3>
+            <p class="text-body" style="font-size:0.8125rem;margin-top:2px;">A ledger of your focused intention.</p>
+          </div>
+          <div class="history-chronicles__actions">
+            <button class="btn-ghost" style="padding:10px 20px;font-size:0.875rem;" id="btn-export-csv">Download
+              CSV</button>
+          </div>
+        </div>
+        <div class="chronicles-table" id="chronicles-table">
+          <!-- JS-rendered rows -->
+        </div>
+        <button class="chronicles-load-more" id="btn-load-more">Load previous entries</button>
+      </div>
+
+      <!-- Mindfulness Quote Banner -->
+      <div class="mindfulness-quote-banner">
+        <div class="mindfulness-quote-card">
+          <h4 class="mindfulness-quote-card__title">Mindfulness Quote</h4>
+          <p class="mindfulness-quote-card__text" id="mindfulness-quote-text">"The rhythm of your focus is the heartbeat
+            of your creativity. Listen to it with stillness."</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="page" id="page-settings" data-page="settings" role="main" aria-label="Settings">
+    <div class="settings-page">
+      <div class="settings-header">
+        <h1 class="text-section-heading">Settings</h1>
+        <p class="text-body">Curate your digital forest. Adjust your rhythms and goals to find the perfect balance
+          between focus and rest.</p>
+      </div>
+
+      <!-- Timer Preferences -->
+      <div class="settings-section">
+        <div class="settings-section__label">
+          <h3 class="settings-section__title">Timer Preferences</h3>
+          <p class="settings-section__desc">Define the intervals that best support your cognitive flow.</p>
+        </div>
+        <div class="card settings-card">
+          <div class="settings-slider-row">
+            <span class="settings-slider-label">Work Session</span>
+            <input type="range" class="settings-slider" id="slider-work" min="5" max="60" step="5" value="25">
+            <span class="settings-slider-value" id="val-work">25 min</span>
+          </div>
+          <div class="settings-slider-row">
+            <span class="settings-slider-label">Short Break</span>
+            <input type="range" class="settings-slider" id="slider-short" min="1" max="15" step="1" value="5">
+            <span class="settings-slider-value" id="val-short">5 min</span>
+          </div>
+          <div class="settings-slider-row">
+            <span class="settings-slider-label">Long Break</span>
+            <input type="range" class="settings-slider" id="slider-long" min="10" max="30" step="5" value="15">
+            <span class="settings-slider-value" id="val-long">15 min</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Session Plan -->
+      <div class="settings-section">
+        <div class="settings-section__label">
+          <h3 class="settings-section__title">Session Plan</h3>
+          <p class="settings-section__desc">Set how many sessions you want to complete in one sitting (up to 30).</p>
+        </div>
+        <div class="card settings-card">
+          <div class="settings-goal-row">
+            <div class="settings-goal-info">
+              <span class="settings-goal-icon">#</span>
+              <div>
+                <div class="settings-goal-title">Number of Sessions</div>
+                <div class="settings-goal-subtitle">Each session: work + break, repeated N times</div>
+              </div>
+            </div>
+            <div class="settings-stepper">
+              <button class="stepper-btn" id="btn-sessions-minus">-</button>
+              <span class="stepper-value" id="val-session-count">4</span>
+              <button class="stepper-btn" id="btn-sessions-plus">+</button>
+            </div>
+          </div>
+          <div class="session-plan-preview" id="session-plan-preview">
+            <!-- JS-rendered session dots -->
+          </div>
+          <div class="session-plan-summary" id="session-plan-summary">
+            4 sessions x 25 min = <strong>1h 40min</strong> total focus time
+          </div>
+        </div>
+      </div>
+
+      <!-- Session Type -->
+      <div class="settings-section">
+        <div class="settings-section__label">
+          <h3 class="settings-section__title">Session Type</h3>
+          <p class="settings-section__desc">Choose the nature of your current work to tailor recommendations.</p>
+        </div>
+        <div class="card settings-card">
+          <div class="session-type-grid" id="session-type-grid">
+            <button class="session-type-btn" data-type="coding">Coding</button>
+            <button class="session-type-btn" data-type="writing">Writing</button>
+            <button class="session-type-btn" data-type="studying">Studying</button>
+            <button class="session-type-btn" data-type="design">Design</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wellness Goals -->
+      <div class="settings-section">
+        <div class="settings-section__label">
+          <h3 class="settings-section__title">Wellness Goals</h3>
+          <p class="settings-section__desc">Prioritize your biological needs alongside your productivity.</p>
+        </div>
+        <div class="card settings-card">
+          <div class="settings-goal-row">
+            <div class="settings-goal-info">
+              <span class="settings-goal-icon">~</span>
+              <div>
+                <div class="settings-goal-title">Daily Water Intake</div>
+                <div class="settings-goal-subtitle">Recommended 8 glasses</div>
+              </div>
+            </div>
+            <div class="settings-stepper">
+              <button class="stepper-btn" id="btn-water-minus">-</button>
+              <span class="stepper-value" id="val-water-goal">8</span>
+              <button class="stepper-btn" id="btn-water-plus">+</button>
+            </div>
+          </div>
+          <div class="settings-slider-row" style="margin-top:16px;">
+            <span class="settings-slider-label">Burnout Threshold</span>
+            <input type="range" class="settings-slider settings-slider--danger" id="slider-burnout" min="50" max="100"
+              step="5" value="80">
+            <span class="settings-slider-value" id="val-burnout">80</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications & Sound -->
+      <div class="settings-section">
+        <div class="settings-section__label">
+          <h3 class="settings-section__title">Notifications &amp; Sound</h3>
+          <p class="settings-section__desc">Control the sensory environment of your workspace.</p>
+        </div>
+        <div class="card settings-card">
+          <div class="settings-toggle-row">
+            <span class="settings-toggle-label">Browser Notifications</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-notifications" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-toggle-row">
+            <span class="settings-toggle-label">Session Start/End Sounds</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-sound" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Milo Color Theme -->
+      <div class="settings-section">
+        <div class="settings-section__label">
+          <h3 class="settings-section__title">Milo's Color</h3>
+          <p class="settings-section__desc">Choose Milo's fur color.</p>
+        </div>
+        <div class="card settings-card">
+          <div class="milo-theme-grid" id="milo-theme-grid">
+            <button class="milo-theme-btn" data-theme="orange" style="background:#F4A460;" title="Orange"></button>
+            <button class="milo-theme-btn" data-theme="black" style="background:#2C2C2C;" title="Black"></button>
+            <button class="milo-theme-btn" data-theme="white" style="background:#F5F5F5;border:1px solid var(--border);"
+              title="White"></button>
+            <button class="milo-theme-btn" data-theme="brown" style="background:#8B6914;" title="Brown"></button>
+            <button class="milo-theme-btn" data-theme="tabby" style="background:#C8A882;" title="Tabby"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account & Data -->
+      <div class="settings-section">
+        <div class="settings-section__label">
+          <h3 class="settings-section__title">Account &amp; Data</h3>
+          <p class="settings-section__desc">Manage your personal information and application history.</p>
+        </div>
+        <div class="card settings-card">
+          <button class="settings-action-row" id="btn-export-data">
+            <span>Export Workspace Data (.json)</span>
+            <span class="settings-action-arrow">&rsaquo;</span>
+          </button>
+          <button class="settings-action-row" id="btn-reset-stats">
+            <span>Reset All Statistics</span>
+            <span class="settings-action-arrow">&rsaquo;</span>
+          </button>
+          <button class="settings-action-row settings-action-row--danger" id="btn-delete-account">
+            <span>Delete Account Permanently</span>
+            <span class="settings-action-arrow" style="color:var(--burnout-crit)">&rsaquo;</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer actions -->
+      <div class="settings-footer-actions">
+        <button class="btn-ghost" id="btn-discard-settings">Discard Changes</button>
+        <button class="btn-primary" id="btn-save-settings">Save Preferences</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================================
+       TO-DO PAGE — Mindful Intentions
+       ============================================= -->
+  <section class="page" id="page-todo" data-page="todo" role="main" aria-label="To-Do">
+    <div class="todo-page">
+      <!-- Header -->
+      <div class="todo-header">
+        <div class="todo-header__text">
+          <span class="todo-header__label">— DAILY RITUAL</span>
+          <h1 class="todo-header__title">Mindful<br>Intentions</h1>
+          <p class="todo-header__desc">Plant the seeds of today's focus. Nurture your tasks with presence and let your
+            productivity bloom naturally.</p>
+        </div>
+        <div class="todo-header__visual">
+          <div class="todo-header__orb"></div>
+          <span class="todo-header__leaf"></span>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="todo-grid">
+        <!-- Left: Task Lists -->
+        <div class="todo-main">
+          <!-- Daily Focus Section -->
+          <div class="todo-section">
+            <div class="todo-section__header">
+              <h2 class="todo-section__title">Daily Focus</h2>
+              <span class="todo-section__count" id="todo-pending-count">0 TASKS REMAINING</span>
+            </div>
+            <button class="todo-plant-btn" id="todo-plant-btn">
+              <span>🌱</span> Plant New Intention
+            </button>
+            <ul class="todo-list" id="todo-daily-list">
+              <!-- JS-rendered active tasks -->
+            </ul>
+          </div>
+
+          <!-- Future Growth Section -->
+          <div class="todo-section">
+            <h2 class="todo-section__title">Future Growth</h2>
+            <ul class="todo-list todo-list--future" id="todo-future-list">
+              <!-- JS-rendered completed tasks -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Right: Sidebar -->
+        <div class="todo-sidebar">
+          <!-- Mindful Integration Card -->
+          <div class="todo-integration-card">
+            <h3 class="todo-integration-card__title">Mindful Integration</h3>
+            <p class="todo-integration-card__desc">Elevate your tasks into ritual sessions. Linking a focus session
+              provides a structured environment for your intentions to flourish.</p>
+            <div class="todo-integration-card__img">
+              <span>☕</span>
+            </div>
+          </div>
+
+          <!-- Today's Reflection -->
+          <div class="todo-reflection-card">
+            <span class="todo-reflection-card__label">TODAY'S REFLECTION</span>
+            <blockquote class="todo-reflection-card__quote" id="todo-reflection-quote">"The forest does not hurry, yet
+              everything is accomplished."</blockquote>
+            <div class="todo-reflection-card__source">
+              <span>🌿</span> Daily Wisdom
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="todo-stats">
+            <div class="todo-stat">
+              <span class="todo-stat__value" id="todo-stat-minutes">0</span>
+              <span class="todo-stat__label">FOCUS MINUTES</span>
+            </div>
+            <div class="todo-stat">
+              <span class="todo-stat__value" id="todo-stat-intentions">0</span>
+              <span class="todo-stat__label">INTENTIONS SET</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================================
+       NEW INTENTION MODAL
+       ============================================= -->
+  <div class="intention-modal-overlay" id="intention-modal-overlay" role="dialog" aria-modal="true">
+    <div class="intention-modal">
+      <div class="intention-modal__header">
+        <div>
+          <h3 class="intention-modal__title">New Intention</h3>
+          <p class="intention-modal__subtitle">PLANTING A SEED FOR TODAY</p>
+        </div>
+        <button class="intention-modal__close" id="intention-modal-close">&times;</button>
+      </div>
+
+      <div class="intention-modal__body">
+        <label class="intention-label">TASK NAME</label>
+        <input type="text" class="intention-input" id="intention-input" placeholder="What will you focus on?"
+          maxlength="120" />
+
+        <label class="intention-label">FOCUS CATEGORY</label>
+        <div class="intention-categories" id="intention-categories">
+          <button class="intention-cat" data-cat="deep-work">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7L12 16.4 5.7 21l2.3-7L2 9.4h7.6z" />
+            </svg>
+            <span>Deep Work</span>
+          </button>
+          <button class="intention-cat active" data-cat="creative-flow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" />
+            </svg>
+            <span>Creative Flow</span>
+          </button>
+          <button class="intention-cat" data-cat="light-focus">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+            </svg>
+            <span>Light Focus</span>
+          </button>
+        </div>
+
+        <div class="intention-link-row">
+          <div class="intention-link-row__left">
+            <span class="intention-link-row__icon">⏱</span>
+            <span>Link to Focus Session</span>
+          </div>
+          <label class="intention-toggle">
+            <input type="checkbox" id="intention-link-session" />
+            <span class="intention-toggle__slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="intention-modal__footer">
+        <button class="intention-discard" id="intention-discard">Discard</button>
+        <button class="intention-submit" id="intention-submit">🌱 Plant Intention</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================
+       FEELING CHECK-IN MODAL
+       ============================================= -->
+  <div class="feeling-modal-overlay" id="feeling-modal-overlay" role="dialog" aria-modal="true"
+    aria-labelledby="feeling-modal-title">
+    <div class="feeling-modal">
+      <div class="feeling-modal__milo">~</div>
+      <h3 class="feeling-modal__title" id="feeling-modal-title">How are you feeling?</h3>
+      <p class="feeling-modal__subtitle">Tell Milo how you're feeling~</p>
+      <div class="feeling-modal__buttons">
+        <button class="feeling-btn" data-feeling="great">Great</button>
+        <button class="feeling-btn" data-feeling="tired">Tired</button>
+        <button class="feeling-btn" data-feeling="stressed">Stressed</button>
+        <button class="feeling-btn" data-feeling="focused">Focused</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================
+       FLOATING BOTTOM TOOLBAR
+       ============================================= -->
+  <div class="floating-toolbar" id="floating-toolbar" style="display:none;">
+    <button class="ft-btn" id="ft-btn-ambience" data-panel="ambience-panel" aria-label="Ambience sounds"
+      title="Ambience">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+        <path
+          d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3v5zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3v5z" />
+      </svg>
+      <span>Ambience</span>
+    </button>
+    <button class="ft-btn" id="ft-btn-music" data-panel="music-panel" aria-label="Music player" title="Music">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M9 18V5l12-2v13" />
+        <circle cx="6" cy="18" r="3" />
+        <circle cx="18" cy="16" r="3" />
+      </svg>
+      <span>Music</span>
+    </button>
+  </div>
+
+  <!-- =============================================
+       AMBIENCE PANEL
+       ============================================= -->
+  <div class="fp-overlay" id="ambience-panel" role="dialog" aria-label="Ambience mixer">
+    <div class="fp-panel">
+      <div class="fp-panel__header">
+        <h3 class="fp-panel__title">Ambient Sounds</h3>
+        <p class="fp-panel__subtitle">Mix your perfect soundscape</p>
+        <button class="fp-panel__close" data-close-panel="ambience-panel" aria-label="Close">&times;</button>
+      </div>
+      <div class="ambience-grid">
+        <div class="ambience-card" data-sound="rain">
+          <div class="ambience-card__icon">🌧</div>
+          <div class="ambience-card__name">Rain</div>
+          <input type="range" class="ambience-slider" min="0" max="100" value="50" data-sound="rain" />
+        </div>
+        <div class="ambience-card" data-sound="campfire">
+          <div class="ambience-card__icon">🔥</div>
+          <div class="ambience-card__name">Campfire</div>
+          <input type="range" class="ambience-slider" min="0" max="100" value="50" data-sound="campfire" />
+        </div>
+        <div class="ambience-card" data-sound="ocean">
+          <div class="ambience-card__icon">🌊</div>
+          <div class="ambience-card__name">Ocean</div>
+          <input type="range" class="ambience-slider" min="0" max="100" value="50" data-sound="ocean" />
+        </div>
+        <div class="ambience-card" data-sound="birds">
+          <div class="ambience-card__icon">🐦</div>
+          <div class="ambience-card__name">Birds</div>
+          <input type="range" class="ambience-slider" min="0" max="100" value="50" data-sound="birds" />
+        </div>
+        <div class="ambience-card" data-sound="cafe">
+          <div class="ambience-card__icon">☕</div>
+          <div class="ambience-card__name">Café</div>
+          <input type="range" class="ambience-slider" min="0" max="100" value="50" data-sound="cafe" />
+        </div>
+        <div class="ambience-card" data-sound="keyboard">
+          <div class="ambience-card__icon">⌨️</div>
+          <div class="ambience-card__name">Keyboard</div>
+          <input type="range" class="ambience-slider" min="0" max="100" value="50" data-sound="keyboard" />
+        </div>
+        <div class="ambience-card" data-sound="wind">
+          <div class="ambience-card__icon">🌬</div>
+          <div class="ambience-card__name">Wind</div>
+          <input type="range" class="ambience-slider" min="0" max="100" value="50" data-sound="wind" />
+        </div>
+        <div class="ambience-card" data-sound="night">
+          <div class="ambience-card__icon">🦗</div>
+          <div class="ambience-card__name">Night</div>
+          <input type="range" class="ambience-slider" min="0" max="100" value="50" data-sound="night" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================
+       MUSIC PANEL
+       ============================================= -->
+  <div class="fp-overlay" id="music-panel" role="dialog" aria-label="Music player">
+    <div class="fp-panel">
+      <div class="fp-panel__header">
+        <h3 class="fp-panel__title">Music Player</h3>
+        <p class="fp-panel__subtitle">Paste a YouTube or Spotify link</p>
+        <button class="fp-panel__close" data-close-panel="music-panel" aria-label="Close">&times;</button>
+      </div>
+      <div class="music-input-row">
+        <input type="url" class="music-url-input" id="music-url-input"
+          placeholder="https://youtube.com/... or https://open.spotify.com/..." />
+        <button class="music-load-btn" id="music-load-btn">Load</button>
+      </div>
+      <div class="music-embed-container" id="music-embed-container">
+        <div class="music-empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+          <p>Paste a link above to start listening</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- =============================================
+       FOOTER
+       ============================================= -->
+  <footer class="footer" id="app-footer" style="display:none;">
+    Made With Love
+  </footer>
+
+  <!-- =============================================
+       TOAST CONTAINER
+       ============================================= -->
+  <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- =============================================
+       JAVASCRIPT
+       ============================================= -->
+  <script src="app.js" defer></script>
+</body>
+
+</html>
