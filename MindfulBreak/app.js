@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
     /* =============================================
        DEFAULT STATE
@@ -209,6 +209,8 @@
       const isLanding = name === 'landing';
       document.getElementById('top-nav').style.display = isLanding ? 'none' : 'flex';
       document.getElementById('app-footer').style.display = isLanding ? 'none' : 'flex';
+      const ftBar = document.getElementById('floating-toolbar');
+      if (ftBar) ftBar.style.display = isLanding ? 'none' : 'flex';
 
       // Update active nav link
       document.querySelectorAll('.top-nav__links a').forEach(a => {
@@ -218,6 +220,7 @@
       // Page-specific hooks
       if (name === 'history')  renderHistoryPage();
       if (name === 'settings') initSettingsPage();
+      if (name === 'todo' && typeof TodoPage !== 'undefined') TodoPage.render();
     }
 
     /* =============================================
@@ -333,12 +336,30 @@
 
         // Send browser notification
         if (completedMode === 'work') {
-        NotificationManager.send('Session complete!', 'Time for a break.');
+          NotificationManager.send('Session complete!', 'Time for a break.');
         } else {
-        NotificationManager.send('Break over!', 'Ready to focus again?');
+          NotificationManager.send('Break over!', 'Ready to focus again?');
         }
 
         _updateUI();
+
+        // Auto-start next session after 3 seconds
+        _scheduleAutoStart(completedMode);
+      }
+
+      /** Schedule auto-start of next session after a brief delay */
+      let _autoStartTimer = null;
+      function _scheduleAutoStart(completedMode) {
+        clearTimeout(_autoStartTimer);
+        const nextLabel = completedMode === 'work'
+          ? (AppState.timerMode === 'longBreak' ? 'long break' : 'short break')
+          : 'work session';
+        showToast(`Starting ${nextLabel} in 3 seconds...`);
+        _autoStartTimer = setTimeout(() => {
+          if (!AppState.timerRunning) {
+            start();
+          }
+        }, 3000);
       }
 
       /** Start or resume the countdown */
@@ -372,6 +393,8 @@
       /** Reset to the current mode's full duration */
       function reset() {
         pause();
+        clearTimeout(_autoStartTimer);
+        _autoStartTimer = null;
         AppState.timerRemaining = _totalDuration();
         _updateUI();
         StorageManager.save(AppState);
@@ -1617,12 +1640,233 @@
       document.querySelectorAll('.nurture-card').forEach(card => {
         card.addEventListener('click', () => showPage('guided-breaks'));
       });
+
+      // Render initial dashboard session progress
+      renderDashboardSessionProgress();
     }
 
     // Boot
     initApp();
 
+    /* =============================================
+       DASHBOARD SESSION PROGRESS RENDERER
+       ============================================= */
+    function renderDashboardSessionProgress() {
+      const totalSessions = AppState.settings.sessionCount || 4;
+      const completed = AppState.sessionsCompleted || 0;
 
+      // Update count text
+      const countEl = document.getElementById('dashboard-session-count');
+      if (countEl) countEl.textContent = `${completed} / ${totalSessions}`;
+
+      // Render dots
+      const dotsEl = document.getElementById('dashboard-session-dots');
+      if (dotsEl) {
+        dotsEl.innerHTML = '';
+        for (let i = 0; i < totalSessions; i++) {
+          const dot = document.createElement('div');
+          dot.className = 'session-progress-dot';
+
+          if (i < completed) {
+            dot.classList.add('session-progress-dot--completed');
+            // checkmark is handled via CSS ::after
+          } else if (i === completed) {
+            dot.classList.add('session-progress-dot--current');
+            dot.textContent = i + 1;
+          } else {
+            dot.classList.add('session-progress-dot--pending');
+            dot.textContent = i + 1;
+          }
+          dotsEl.appendChild(dot);
+        }
+      }
+
+      // Update progress bar
+      const barEl = document.getElementById('dashboard-session-bar');
+      if (barEl) {
+        const pct = totalSessions > 0 ? Math.min((completed / totalSessions) * 100, 100) : 0;
+        barEl.style.width = pct + '%';
+      }
+    }
+
+    // Update dashboard progress on session complete
+    TimerEngine.onSessionComplete((mode) => {
+      if (mode === 'work') renderDashboardSessionProgress();
+    });
+
+
+/* =============================================
+   FOCUS GROWTH HEATMAP RENDERER
+   ============================================= */
+function renderFocusGrowthHeatmap() {
+  const graphEl = document.getElementById('focus-growth-graph');
+  const monthsEl = document.getElementById('focus-growth-months');
+  if (!graphEl) return;
+
+  // Initialize or load focus growth data
+  if (!AppState.focusGrowthData) AppState.focusGrowthData = {};
+
+  // Record today's data
+  const today = new Date();
+  const todayKey = today.toISOString().split('T')[0];
+  AppState.focusGrowthData[todayKey] = AppState.totalSessionsToday || 0;
+  StorageManager.save(AppState);
+
+  // Current year boundaries
+  const currentYear = today.getFullYear();
+  const jan1 = new Date(currentYear, 0, 1);
+  const dec31 = new Date(currentYear, 11, 31);
+
+  // Pad start to the Sunday before (or on) Jan 1
+  const startPad = jan1.getDay(); // 0=Sun already, else pad back
+  const startDate = new Date(jan1);
+  startDate.setDate(startDate.getDate() - startPad);
+
+  // Pad end to the Saturday after (or on) Dec 31
+  const endPad = (6 - dec31.getDay()); // 6=Sat already, else pad forward
+  const endDate = new Date(dec31);
+  endDate.setDate(endDate.getDate() + endPad);
+
+  // Total days in padded range
+  const totalDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+  // Find max sessions in any day for normalization
+  const allValues = Object.values(AppState.focusGrowthData);
+  const maxSessions = Math.max(1, ...allValues);
+
+  // Clear
+  graphEl.innerHTML = '';
+  if (monthsEl) monthsEl.innerHTML = '';
+
+  const MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const monthPositions = {};
+
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().split('T')[0];
+    const sessions = AppState.focusGrowthData[key] || 0;
+
+    // Calculate level (0-4)
+    let level = 0;
+    if (sessions > 0) {
+      const ratio = sessions / maxSessions;
+      if (ratio <= 0.25) level = 1;
+      else if (ratio <= 0.5) level = 2;
+      else if (ratio <= 0.75) level = 3;
+      else level = 4;
+    }
+
+    // Future dates stay at level 0
+    if (d > today) level = 0;
+
+    const cell = document.createElement('div');
+    cell.className = 'focus-growth-cell';
+    cell.setAttribute('data-level', level);
+
+    // Tooltip
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const sessionStr = sessions === 0 ? 'No sessions' : sessions + (sessions === 1 ? ' session' : ' sessions');
+    cell.setAttribute('data-tooltip', `${sessionStr} on ${dateStr}`);
+
+    graphEl.appendChild(cell);
+
+    // Track first Sunday of each month for label positions
+    const weekIdx = Math.floor(i / 7);
+    if (d.getFullYear() === currentYear) {
+      const monthKey = d.getMonth();
+      if (d.getDay() === 0 && !monthPositions[monthKey]) {
+        monthPositions[monthKey] = { name: MONTH_NAMES[monthKey], week: weekIdx };
+      }
+    }
+  }
+
+  // Render month labels (JAN through DEC)
+  if (monthsEl) {
+    const totalWeeks = Math.ceil(totalDays / 7);
+    const sortedMonths = Object.entries(monthPositions)
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .map(e => e[1]);
+
+    sortedMonths.forEach((m, idx) => {
+      const label = document.createElement('span');
+      label.className = 'focus-growth-month-label';
+      label.textContent = m.name;
+
+      const nextWeek = (idx < sortedMonths.length - 1) ? sortedMonths[idx + 1].week : totalWeeks;
+      const span = nextWeek - m.week;
+      label.style.flex = span;
+
+      monthsEl.appendChild(label);
+    });
+  }
+}
+
+// Render heatmap on init and when sessions complete
+renderFocusGrowthHeatmap();
+
+// Floating tooltip for heatmap cells (avoids overflow clipping)
+(function initHeatmapTooltip() {
+  const section = document.querySelector('.focus-growth-section');
+  const graph = document.getElementById('focus-growth-graph');
+  const tooltip = document.getElementById('focus-growth-tooltip');
+  if (!section || !graph || !tooltip) return;
+
+  graph.addEventListener('mouseenter', function(e) {
+    if (!e.target.classList.contains('focus-growth-cell')) return;
+    const text = e.target.getAttribute('data-tooltip');
+    if (!text) return;
+    tooltip.textContent = text;
+    tooltip.classList.add('visible');
+
+    const sectionRect = section.getBoundingClientRect();
+    const cellRect = e.target.getBoundingClientRect();
+    tooltip.style.left = (cellRect.left + cellRect.width / 2 - sectionRect.left) + 'px';
+    tooltip.style.top = (cellRect.top - sectionRect.top - 32) + 'px';
+  }, true);
+
+  graph.addEventListener('mouseleave', function(e) {
+    if (e.target.classList.contains('focus-growth-cell')) {
+      tooltip.classList.remove('visible');
+    }
+  }, true);
+
+  graph.addEventListener('mouseover', function(e) {
+    if (!e.target.classList.contains('focus-growth-cell')) {
+      tooltip.classList.remove('visible');
+      return;
+    }
+    const text = e.target.getAttribute('data-tooltip');
+    if (!text) return;
+    tooltip.textContent = text;
+    tooltip.classList.add('visible');
+
+    const sectionRect = section.getBoundingClientRect();
+    const cellRect = e.target.getBoundingClientRect();
+    tooltip.style.left = (cellRect.left + cellRect.width / 2 - sectionRect.left) + 'px';
+    tooltip.style.top = (cellRect.top - sectionRect.top - 32) + 'px';
+  });
+
+  graph.addEventListener('mouseout', function(e) {
+    if (e.target.classList.contains('focus-growth-cell')) {
+      const related = e.relatedTarget;
+      if (!related || !related.classList.contains('focus-growth-cell')) {
+        tooltip.classList.remove('visible');
+      }
+    }
+  });
+})();
+
+TimerEngine.onSessionComplete((mode) => {
+  if (mode === 'work') {
+    // Update today's data
+    const todayKey = new Date().toISOString().split('T')[0];
+    AppState.focusGrowthData = AppState.focusGrowthData || {};
+    AppState.focusGrowthData[todayKey] = AppState.totalSessionsToday || 0;
+    StorageManager.save(AppState);
+    renderFocusGrowthHeatmap();
+  }
+});
 
 /* =============================================
    GUIDED BREAKS ? CONTROLLER
@@ -1953,7 +2197,810 @@ showPage = function(name) {
   _origShowPage(name);
   if (name === 'guided-breaks') showGBSelector();
   if (name === 'settings') { _pendingSessionCount = AppState.settings.sessionCount || 4; _renderSessionPlan(); }
+  if (name === 'dashboard') renderFocusInsights();
 };
 
+/* =============================================
+   FOCUS INSIGHTS RENDERER
+   ============================================= */
+function renderFocusInsights() {
+  const el = id => document.getElementById(id);
+
+  // Average duration
+  const sessions = AppState.sessionHistory || [];
+  if (sessions.length > 0) {
+    const totalDur = sessions.reduce((sum, s) => sum + (s.duration || AppState.settings.workDuration), 0);
+    const avg = Math.round(totalDur / sessions.length);
+    if (el('insight-avg-duration')) el('insight-avg-duration').textContent = avg + 'm';
+  } else {
+    if (el('insight-avg-duration')) el('insight-avg-duration').textContent = AppState.settings.workDuration + 'm';
+  }
+
+  // Streak
+  if (el('insight-streak')) {
+    const days = AppState.streakDays || 0;
+    el('insight-streak').textContent = days + (days === 1 ? ' day' : ' days');
+  }
+
+  // Sessions today
+  if (el('insight-sessions-today')) {
+    el('insight-sessions-today').textContent = AppState.totalSessionsToday || 0;
+  }
+
+  // Mood (last feeling check-in)
+  if (el('insight-mood')) {
+    const mood = AppState.lastMood || null;
+    const moodEmojis = {
+      great: '😊',
+      tired: '😴',
+      stressed: '😰',
+      focused: '🎯'
+    };
+    el('insight-mood').textContent = mood ? moodEmojis[mood] || '—' : '—';
+  }
+}
+
+// Update Focus Insights when sessions complete
+TimerEngine.onSessionComplete((mode) => {
+  if (mode === 'work') renderFocusInsights();
+});
+
+/* =============================================
+   FEELING CHECK-IN -> TRACK LAST MOOD
+   ============================================= */
+// Patch feeling buttons to save last mood to AppState
+document.querySelectorAll('.feeling-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    AppState.lastMood = btn.dataset.feeling;
+    StorageManager.save(AppState);
+    renderFocusInsights();
+  });
+});
+
+/* =============================================
+   DARK MODE TOGGLE
+   ============================================= */
+const DarkModeController = (() => {
+  const STORAGE_KEY = 'mindfulbreak_darkmode';
+
+  function _isEnabled() {
+    try {
+      return localStorage.getItem(STORAGE_KEY) === 'true';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function _save(val) {
+    try {
+      localStorage.setItem(STORAGE_KEY, val ? 'true' : 'false');
+    } catch (e) { /* ignore */ }
+  }
+
+  function apply(dark) {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    _save(dark);
+  }
+
+  function toggle() {
+    const current = document.documentElement.getAttribute('data-theme') === 'dark';
+    apply(!current);
+  }
+
+  function init() {
+    const dark = _isEnabled();
+    apply(dark);
+    const btn = document.getElementById('dark-mode-toggle');
+    if (btn) btn.addEventListener('click', toggle);
+  }
+
+  return { init, toggle, apply };
+})();
+
+DarkModeController.init();
+
+/* =============================================
+   TIMER MODE COLOR DISTINCTION
+   ============================================= */
+function updateTimerModeAttribute() {
+  document.documentElement.setAttribute('data-timer-mode', AppState.timerMode);
+}
+
+// Update on every tick and session complete
+TimerEngine.onTick(() => updateTimerModeAttribute());
+TimerEngine.onSessionComplete(() => updateTimerModeAttribute());
+// Initial set
+updateTimerModeAttribute();
+
+/* =============================================
+   ALL-SESSIONS-COMPLETED CELEBRATION
+   ============================================= */
+TimerEngine.onSessionComplete((mode) => {
+  if (mode === 'work') {
+    const target = AppState.settings.sessionCount || 4;
+    if (AppState.sessionsCompleted >= target) {
+      // All sessions done! Big celebration
+      setTimeout(() => {
+        triggerConfetti();
+        triggerConfetti(); // Extra confetti
+        MiloController.celebrate();
+        showToast('🎉 All sessions completed! Amazing work today!');
+
+        // Update speech bubble
+        const bubble = document.getElementById('milo-speech-bubble');
+        const quoteEl = bubble ? bubble.querySelector('.milo-quote') : null;
+        if (quoteEl) {
+          bubble.style.opacity = '0';
+          setTimeout(() => {
+            quoteEl.innerHTML = '<em>"AMAZING!! Kamu berhasil selesaikan semua sesi! Milo bangga banget! 🌟"</em>';
+            bubble.style.opacity = '1';
+          }, 200);
+        }
+      }, 500);
+    }
+  }
+});
+
+/* =============================================
+   MINDFULNESS QUOTE ROTATION
+   ============================================= */
+const MINDFULNESS_QUOTES = [
+  "The rhythm of your focus is the heartbeat of your creativity. Listen to it with stillness.",
+  "Rest is not idleness. It is the soil in which the seeds of your next idea grow.",
+  "A calm mind is not the absence of storms, but the ability to find peace amidst them.",
+  "Your attention is a garden. What you water, grows. What you ignore, fades.",
+  "Progress is not measured in hours worked, but in moments of clarity found.",
+  "The space between breaths is where productivity meets peace.",
+  "Take breaks not because you're tired, but because you deserve to thrive.",
+  "The best ideas come when the mind is free to wander. Give yourself permission.",
+  "Your body is the vessel of your ambition. Care for it like the treasure it is.",
+  "In the pause between tasks, you'll find the perspective that transforms everything.",
+  "Every deep breath is a reset button. Press it often.",
+  "Focus flows best when it's balanced with rest. Honor both equally.",
+  "The most productive thing you can do right now might be to stop and breathe.",
+  "Small breaks create big breakthroughs. Trust the process.",
+  "Your wellbeing is not a luxury. It is the foundation of everything you build."
+];
+
+function rotateMinfulnessQuote() {
+  const quoteEl = document.getElementById('mindfulness-quote-text');
+  if (!quoteEl) return;
+  const randomIdx = Math.floor(Math.random() * MINDFULNESS_QUOTES.length);
+  quoteEl.textContent = '"' + MINDFULNESS_QUOTES[randomIdx] + '"';
+}
+
+// Rotate quote every time History page is opened (already handled via showPage -> renderHistoryPage)
+// Patch renderHistoryPage to also rotate quote
+const _origRenderHistory = renderHistoryPage;
+renderHistoryPage = function() {
+  _origRenderHistory();
+  rotateMinfulnessQuote();
+};
+
+/* =============================================
+   FLOATING TOOLBAR & PANEL CONTROLLER
+   ============================================= */
+const FloatingToolbar = (() => {
+  let _activePanel = null;
+
+  function _openPanel(panelId) {
+    const overlay = document.getElementById(panelId);
+    if (!overlay) return;
+    overlay.classList.add('open');
+    const panel = overlay.querySelector('.fp-panel');
+    // Use requestAnimationFrame to ensure display:flex is applied before transition
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        panel.classList.add('visible');
+      });
+    });
+  }
+
+  function _closePanel(panelId, cb) {
+    const overlay = document.getElementById(panelId);
+    if (!overlay) return;
+    const panel = overlay.querySelector('.fp-panel');
+    panel.classList.remove('visible');
+    // Wait for CSS transition to finish before hiding overlay
+    setTimeout(() => {
+      overlay.classList.remove('open');
+      if (cb) cb();
+    }, 350);
+  }
+
+  function toggle(panelId) {
+    if (_activePanel === panelId) {
+      _closePanel(panelId);
+      _activePanel = null;
+      _updateButtons();
+      return;
+    }
+    if (_activePanel) {
+      _closePanel(_activePanel, () => {
+        _activePanel = panelId;
+        _openPanel(panelId);
+        _updateButtons();
+      });
+    } else {
+      _activePanel = panelId;
+      _openPanel(panelId);
+      _updateButtons();
+    }
+  }
+
+  function closeAll() {
+    if (_activePanel) {
+      _closePanel(_activePanel);
+      _activePanel = null;
+      _updateButtons();
+    }
+  }
+
+  function _updateButtons() {
+    document.querySelectorAll('.ft-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.panel === _activePanel);
+    });
+  }
+
+  function init() {
+    document.querySelectorAll('.ft-btn').forEach(btn => {
+      btn.addEventListener('click', () => toggle(btn.dataset.panel));
+    });
+
+    document.querySelectorAll('[data-close-panel]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const panelId = btn.dataset.closePanel;
+        _closePanel(panelId);
+        if (_activePanel === panelId) _activePanel = null;
+        _updateButtons();
+      });
+    });
+
+    document.querySelectorAll('.fp-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeAll();
+      });
+    });
+  }
+
+  return { init, toggle, closeAll };
+})();
+
+FloatingToolbar.init();
 
 
+/* =============================================
+   AMBIENCE MIXER — Web Audio API
+   ============================================= */
+const AmbienceMixer = (() => {
+  let _ctx = null;
+  const _nodes = {};
+  const STORAGE_KEY = 'mindfulbreak_ambience';
+
+  function _getCtx() {
+    if (!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_ctx.state === 'suspended') _ctx.resume();
+    return _ctx;
+  }
+
+  // Noise generator
+  function _createNoise(type) {
+    const ctx = _getCtx();
+    const bufferSize = 2 * ctx.sampleRate;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    switch (type) {
+      case 'rain':
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.3;
+          // Add occasional louder drops
+          if (Math.random() < 0.001) data[i] *= 4;
+        }
+        break;
+      case 'ocean':
+        for (let i = 0; i < bufferSize; i++) {
+          const wave = Math.sin(i / (ctx.sampleRate * 4)) * 0.5;
+          data[i] = (Math.random() * 2 - 1) * 0.15 * (0.5 + wave * 0.5);
+        }
+        break;
+      case 'wind':
+        for (let i = 0; i < bufferSize; i++) {
+          const mod = Math.sin(i / (ctx.sampleRate * 6)) * 0.5 + 0.5;
+          data[i] = (Math.random() * 2 - 1) * 0.2 * mod;
+        }
+        break;
+      case 'campfire':
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.15;
+          if (Math.random() < 0.005) data[i] *= 3;
+        }
+        break;
+      case 'birds':
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = 0;
+          if (Math.random() < 0.0008) {
+            const chirpLen = Math.floor(Math.random() * 800) + 200;
+            for (let j = 0; j < chirpLen && i + j < bufferSize; j++) {
+              data[i + j] = Math.sin(j * (0.1 + Math.random() * 0.15)) * 0.3 * (1 - j / chirpLen);
+            }
+            i += 800;
+          }
+        }
+        break;
+      case 'cafe':
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.08;
+          if (Math.random() < 0.0005) data[i] += (Math.random() - 0.5) * 0.4;
+        }
+        break;
+      case 'keyboard':
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = 0;
+          if (Math.random() < 0.0012) {
+            const clickLen = Math.floor(Math.random() * 120) + 40;
+            for (let j = 0; j < clickLen && i + j < bufferSize; j++) {
+              data[i + j] = (Math.random() * 2 - 1) * 0.4 * (1 - j / clickLen);
+            }
+            i += 160;
+          }
+        }
+        break;
+      case 'night':
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.02;
+          if (Math.random() < 0.0006) {
+            const chirpLen = Math.floor(Math.random() * 600) + 300;
+            for (let j = 0; j < chirpLen && i + j < bufferSize; j++) {
+              data[i + j] += Math.sin(j * 0.08) * 0.2 * (1 - j / chirpLen);
+            }
+            i += 500;
+          }
+        }
+        break;
+      default:
+        for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.1;
+    }
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+
+    // Add filter for smoother sound
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = type === 'rain' ? 3000 : type === 'ocean' ? 800 : type === 'wind' ? 600 : 4000;
+
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    source.start();
+
+    return { source, gain, filter };
+  }
+
+  function _toggleSound(type) {
+    if (_nodes[type]) {
+      // Stop
+      _nodes[type].gain.gain.linearRampToValueAtTime(0, _getCtx().currentTime + 0.3);
+      setTimeout(() => {
+        try { _nodes[type].source.stop(); } catch (e) {}
+        delete _nodes[type];
+      }, 350);
+      return false;
+    } else {
+      // Start
+      const node = _createNoise(type);
+      _nodes[type] = node;
+      const vol = _getSliderValue(type);
+      node.gain.gain.linearRampToValueAtTime(vol, _getCtx().currentTime + 0.3);
+      return true;
+    }
+  }
+
+  function _setVolume(type, vol) {
+    if (_nodes[type]) {
+      _nodes[type].gain.gain.linearRampToValueAtTime(vol, _getCtx().currentTime + 0.1);
+    }
+  }
+
+  function _getSliderValue(type) {
+    const slider = document.querySelector(`.ambience-slider[data-sound="${type}"]`);
+    return slider ? slider.value / 100 * 0.6 : 0.3;
+  }
+
+  function _saveState() {
+    const state = {};
+    document.querySelectorAll('.ambience-card').forEach(card => {
+      const type = card.dataset.sound;
+      state[type] = {
+        active: card.classList.contains('active'),
+        volume: card.querySelector('.ambience-slider').value
+      };
+    });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function _loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      Object.entries(state).forEach(([type, s]) => {
+        const card = document.querySelector(`.ambience-card[data-sound="${type}"]`);
+        if (!card) return;
+        const slider = card.querySelector('.ambience-slider');
+        if (slider) slider.value = s.volume;
+        // Don't auto-play on load — user must click to resume (browser autoplay policy)
+      });
+    } catch (e) {}
+  }
+
+  function init() {
+    _loadState();
+
+    document.querySelectorAll('.ambience-card').forEach(card => {
+      const type = card.dataset.sound;
+      const slider = card.querySelector('.ambience-slider');
+
+      // Click card to toggle sound
+      card.addEventListener('click', (e) => {
+        if (e.target.classList.contains('ambience-slider')) return; // Don't toggle on slider drag
+        const active = _toggleSound(type);
+        card.classList.toggle('active', active);
+
+        // Anime.js pulse animation
+        if (active && typeof anime !== 'undefined') {
+          anime({
+            targets: card,
+            scale: [1, 1.06, 1],
+            duration: 400,
+            easing: 'easeOutElastic(1, .5)'
+          });
+        }
+        _saveState();
+      });
+
+      // Volume slider
+      slider.addEventListener('input', () => {
+        const vol = slider.value / 100 * 0.6;
+        _setVolume(type, vol);
+        _saveState();
+      });
+
+      // Prevent slider click from bubbling to card toggle
+      slider.addEventListener('click', (e) => e.stopPropagation());
+    });
+  }
+
+  return { init };
+})();
+
+AmbienceMixer.init();
+
+
+/* =============================================
+   MUSIC PLAYER — YouTube / Spotify Embed
+   ============================================= */
+const MusicPlayer = (() => {
+  const STORAGE_KEY = 'mindfulbreak_music_url';
+
+  function _parseYouTube(url) {
+    // youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID, youtube.com/live/ID
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/.*[?&]v=([a-zA-Z0-9_-]{11})/
+    ];
+    for (const p of patterns) {
+      const m = url.match(p);
+      if (m) return m[1];
+    }
+    return null;
+  }
+
+  function _parseSpotify(url) {
+    // open.spotify.com/track/ID, open.spotify.com/playlist/ID, open.spotify.com/album/ID
+    const m = url.match(/open\.spotify\.com\/(track|playlist|album)\/([a-zA-Z0-9]+)/);
+    if (m) return { type: m[1], id: m[2] };
+    return null;
+  }
+
+  function _loadUrl(url) {
+    const container = document.getElementById('music-embed-container');
+    if (!container) return;
+
+    // Try YouTube
+    const ytId = _parseYouTube(url);
+    if (ytId) {
+      container.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1" width="100%" height="200" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      _save(url);
+      return;
+    }
+
+    // Try Spotify
+    const sp = _parseSpotify(url);
+    if (sp) {
+      const height = sp.type === 'track' ? 152 : 352;
+      container.innerHTML = `<iframe src="https://open.spotify.com/embed/${sp.type}/${sp.id}?utm_source=generator&theme=0" width="100%" height="${height}" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
+      _save(url);
+      return;
+    }
+
+    // Unknown URL
+    showToast('⚠️ Unrecognized URL. Please paste a YouTube or Spotify link.');
+  }
+
+  function _save(url) {
+    try { localStorage.setItem(STORAGE_KEY, url); } catch (e) {}
+  }
+
+  function _load() {
+    try { return localStorage.getItem(STORAGE_KEY) || ''; } catch (e) { return ''; }
+  }
+
+  function init() {
+    const input = document.getElementById('music-url-input');
+    const btn = document.getElementById('music-load-btn');
+    if (!btn || !input) return;
+
+    // Restore saved URL
+    const savedUrl = _load();
+    if (savedUrl) {
+      input.value = savedUrl;
+    }
+
+    btn.addEventListener('click', () => {
+      const url = input.value.trim();
+      if (!url) return;
+      _loadUrl(url);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const url = input.value.trim();
+        if (url) _loadUrl(url);
+      }
+    });
+  }
+
+  return { init };
+})();
+
+MusicPlayer.init();
+
+
+/* =============================================
+   TO-DO PAGE — Mindful Intentions Controller
+   ============================================= */
+const TodoPage = (() => {
+  const STORAGE_KEY = 'mindfulbreak_intentions';
+  const CAT_LABELS = {
+    'deep-work': 'Deep Work',
+    'creative-flow': 'Creative Flow',
+    'light-focus': 'Light Focus'
+  };
+
+  const REFLECTIONS = [
+    '"The forest does not hurry, yet everything is accomplished."',
+    '"Be like water — sometimes still, sometimes in motion, always purposeful."',
+    '"A single seed of intention can grow into a forest of achievement."',
+    '"Patience is not passive; it is concentrated strength."',
+    '"Do not rush the seasons of your growth."',
+    '"What you nurture with attention will flourish in time."',
+    '"Small consistent steps create lasting transformation."',
+    '"Let your work be rooted in calm, not urgency."'
+  ];
+
+  function _load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+
+  function _save(tasks) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch (e) {}
+  }
+
+  function _escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function _renderItem(task, idx) {
+    const li = document.createElement('li');
+    li.className = 'todo-item' + (task.done ? ' done' : '');
+    li.innerHTML = `
+      <button class="todo-item__checkbox ${task.done ? 'checked' : ''}" data-idx="${idx}"></button>
+      <div class="todo-item__content">
+        <div class="todo-item__title">${_escapeHtml(task.text)}</div>
+        <div class="todo-item__meta">
+          <span class="todo-item__tag todo-item__tag--${task.category || 'light-focus'}">${CAT_LABELS[task.category] || 'Light Focus'}</span>
+          ${task.linkedSession ? '<span class="todo-item__session-link">● LINK FOCUS SESSION</span>' : ''}
+        </div>
+      </div>
+      <button class="todo-item__delete" data-idx="${idx}" title="Delete">&times;</button>
+    `;
+    return li;
+  }
+
+  function render() {
+    const dailyList = document.getElementById('todo-daily-list');
+    const futureList = document.getElementById('todo-future-list');
+    const pendingCount = document.getElementById('todo-pending-count');
+    const statMinutes = document.getElementById('todo-stat-minutes');
+    const statIntentions = document.getElementById('todo-stat-intentions');
+
+    if (!dailyList) return;
+
+    const tasks = _load();
+    const activeTasks = tasks.filter(t => !t.done);
+    const doneTasks = tasks.filter(t => t.done);
+
+    // Update counter
+    if (pendingCount) {
+      pendingCount.textContent = `${String(activeTasks.length).padStart(2, '0')} TASKS REMAINING`;
+    }
+
+    // Update stats
+    if (statIntentions) statIntentions.textContent = String(tasks.length).padStart(2, '0');
+    if (statMinutes) {
+      const mins = (AppState.sessionHistory || []).reduce((sum, s) => sum + (s.duration || 0), 0);
+      statMinutes.textContent = String(Math.round(mins / 60)).padStart(2, '0');
+    }
+
+    // Daily Focus list (active tasks)
+    dailyList.innerHTML = '';
+    if (activeTasks.length === 0) {
+      dailyList.innerHTML = '<li class="todo-empty">No active intentions. Plant a new seed to begin.</li>';
+    } else {
+      activeTasks.forEach((task, i) => {
+        const realIdx = tasks.indexOf(task);
+        dailyList.appendChild(_renderItem(task, realIdx));
+      });
+    }
+
+    // Future Growth list (completed tasks)
+    if (futureList) {
+      futureList.innerHTML = '';
+      if (doneTasks.length === 0) {
+        futureList.innerHTML = '<li class="todo-empty">Completed intentions will appear here.</li>';
+      } else {
+        doneTasks.forEach(task => {
+          const realIdx = tasks.indexOf(task);
+          futureList.appendChild(_renderItem(task, realIdx));
+        });
+      }
+    }
+
+    // Rotate reflection quote
+    const quoteEl = document.getElementById('todo-reflection-quote');
+    if (quoteEl) {
+      quoteEl.textContent = REFLECTIONS[Math.floor(Math.random() * REFLECTIONS.length)];
+    }
+  }
+
+  function _toggleTask(idx) {
+    const tasks = _load();
+    if (tasks[idx]) {
+      tasks[idx].done = !tasks[idx].done;
+      _save(tasks);
+      render();
+    }
+  }
+
+  function _deleteTask(idx) {
+    const tasks = _load();
+    tasks.splice(idx, 1);
+    _save(tasks);
+    render();
+  }
+
+  function _addTask(text, category, linkedSession) {
+    const tasks = _load();
+    tasks.push({
+      text,
+      category: category || 'light-focus',
+      linkedSession: !!linkedSession,
+      done: false,
+      id: Date.now(),
+      createdAt: new Date().toISOString()
+    });
+    _save(tasks);
+    render();
+  }
+
+  function _openModal() {
+    const overlay = document.getElementById('intention-modal-overlay');
+    if (overlay) overlay.classList.add('open');
+    const input = document.getElementById('intention-input');
+    if (input) { input.value = ''; input.focus(); }
+    // Reset category selection
+    document.querySelectorAll('.intention-cat').forEach(c => c.classList.remove('active'));
+    const defaultCat = document.querySelector('.intention-cat[data-cat="creative-flow"]');
+    if (defaultCat) defaultCat.classList.add('active');
+    // Reset toggle
+    const toggle = document.getElementById('intention-link-session');
+    if (toggle) toggle.checked = false;
+  }
+
+  function _closeModal() {
+    const overlay = document.getElementById('intention-modal-overlay');
+    if (overlay) overlay.classList.remove('open');
+  }
+
+  function init() {
+    // Plant New Intention button -> opens modal
+    const plantBtn = document.getElementById('todo-plant-btn');
+    if (plantBtn) plantBtn.addEventListener('click', _openModal);
+
+    // Modal close
+    const closeBtn = document.getElementById('intention-modal-close');
+    if (closeBtn) closeBtn.addEventListener('click', _closeModal);
+
+    const discardBtn = document.getElementById('intention-discard');
+    if (discardBtn) discardBtn.addEventListener('click', _closeModal);
+
+    // Click overlay to close
+    const overlay = document.getElementById('intention-modal-overlay');
+    if (overlay) overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) _closeModal();
+    });
+
+    // Category selection
+    document.querySelectorAll('.intention-cat').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.intention-cat').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Submit intention
+    const submitBtn = document.getElementById('intention-submit');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', () => {
+        const input = document.getElementById('intention-input');
+        const text = input ? input.value.trim() : '';
+        if (!text) { if (input) input.focus(); return; }
+        const activeCat = document.querySelector('.intention-cat.active');
+        const category = activeCat ? activeCat.dataset.cat : 'light-focus';
+        const linked = document.getElementById('intention-link-session');
+        _addTask(text, category, linked ? linked.checked : false);
+        _closeModal();
+        showToast('🌱 Intention planted!');
+      });
+    }
+
+    // Enter key in input submits
+    const input = document.getElementById('intention-input');
+    if (input) input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (submitBtn) submitBtn.click();
+      }
+    });
+
+    // Task list click delegation
+    const dailyList = document.getElementById('todo-daily-list');
+    const futureList = document.getElementById('todo-future-list');
+
+    [dailyList, futureList].forEach(list => {
+      if (!list) return;
+      list.addEventListener('click', (e) => {
+        const checkbox = e.target.closest('.todo-item__checkbox');
+        const deleteBtn = e.target.closest('.todo-item__delete');
+        if (checkbox) _toggleTask(parseInt(checkbox.dataset.idx));
+        if (deleteBtn) _deleteTask(parseInt(deleteBtn.dataset.idx));
+      });
+    });
+
+    render();
+  }
+
+  return { init, render };
+})();
+
+TodoPage.init();
