@@ -56,9 +56,19 @@
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
         </svg>
       </button>
+      <button class="zen-mode-toggle" id="btn-zen-mode" aria-label="Zen Mode" title="Zen Mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+        </svg>
+      </button>
       <div class="avatar-circle" id="avatar-circle" aria-label="User avatar">M</div>
     </div>
   </nav>
+
+  <!-- Exit Zen Mode Button (Hidden via CSS) -->
+  <button class="btn-exit-zen" id="btn-exit-zen" aria-label="Exit Zen Mode">
+    &times; Exit Zen
+  </button>
 
   <!-- =============================================
        PAGES
@@ -101,8 +111,8 @@
           </div>
           <div class="activity-card__name">Coding</div>
           <div class="activity-card__tags">
-            <span class="tag">Wrist Breaks</span>
-            <span class="tag">Eye Breaks</span>
+            <span class="tag">Posture</span>
+            <span class="tag">Neck Breaks</span>
           </div>
         </div>
         <div class="activity-card" data-type="writing">
@@ -246,6 +256,9 @@
           <div class="timer-display">
             <span class="timer-time" id="timer-time">25:00</span>
             <span class="timer-mode-label text-label" id="timer-mode-label">Deep Focus Session</span>
+            <div class="dashboard-current-task" id="dashboard-current-task" style="display: none;">
+              <!-- JS-rendered active task name -->
+            </div>
           </div>
         </div>
         <div class="timer-controls">
@@ -877,6 +890,20 @@
             <input type="range" class="settings-slider" id="slider-long" min="10" max="30" step="5" value="15">
             <span class="settings-slider-value" id="val-long">15 min</span>
           </div>
+          <div class="settings-toggle-row" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+            <span class="settings-toggle-label">Auto-start Breaks</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-autostart-break">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-toggle-row">
+            <span class="settings-toggle-label">Auto-start Focus</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-autostart-focus">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -1082,7 +1109,8 @@
             <p class="todo-integration-card__desc">Elevate your tasks into ritual sessions. Linking a focus session
               provides a structured environment for your intentions to flourish.</p>
             <div class="todo-integration-card__img">
-              <span>☕</span>
+              <img src="https://cdn.dribbble.com/userupload/42508154/file/original-29975e94565d44e6d3538fc0d3a6076c.gif"
+                alt="Mindful coffee" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
           </div>
 
@@ -1303,6 +1331,28 @@
   </div>
 
 
+
+  <!-- =============================================
+       TASK COMPLETION MODAL
+       ============================================= -->
+  <div class="intention-modal-overlay" id="task-completion-modal" role="dialog" aria-modal="true" style="display:none; z-index: 1000;">
+    <div class="intention-modal">
+      <div class="intention-modal__header">
+        <h3 class="intention-modal__title">Session Complete!</h3>
+        <button class="intention-modal__close" id="btn-close-completion-modal" aria-label="Close">&times;</button>
+      </div>
+      <div class="intention-modal__body" style="text-align: center; display: flex; flex-direction: column; gap: 16px;">
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Did you finish your focused intention?</p>
+        <div id="completion-task-name" style="font-weight: 600; font-size: 1.1rem; color: var(--text-primary); padding: 16px; background: var(--bg-body); border-radius: 12px; border: 1px solid var(--border);">
+          <!-- js populated text -->
+        </div>
+      </div>
+      <div class="intention-modal__footer" style="margin-top: 24px; display: flex; gap: 12px;">
+        <button class="btn-ghost" id="btn-task-not-yet" style="flex: 1;">Not Yet</button>
+        <button class="btn-primary" id="btn-task-done" style="flex: 1;">Yes, I Did It!</button>
+      </div>
+    </div>
+  </div>
 
   <!-- =============================================
        FOOTER

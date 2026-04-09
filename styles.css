@@ -447,6 +447,23 @@
       gap: 6px;
     }
 
+    .dashboard-current-task {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: var(--bg-card);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      margin-top: 8px;
+      text-align: center;
+      max-width: 180px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
     .timer-time {
       font-family: 'Playfair Display', Georgia, serif;
       font-size: 2.5rem;
@@ -3090,13 +3107,11 @@
 
 .todo-integration-card__img {
   width: 100%;
-  height: 140px;
-  background: linear-gradient(145deg, #b8b49e 0%, #8a8670 100%);
-  border-radius: 14px;
+  height: auto;
+  min-height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
 }
 
 /* Reflection card */
@@ -3469,4 +3484,155 @@
 
 [data-theme="dark"] .todo-header__orb {
   background: linear-gradient(135deg, #4a4838, #3d3b2f);
+}
+
+/* =============================================
+   ZEN MODE
+   ============================================= */
+.zen-mode-toggle {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--border);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .zen-mode-toggle {
+  background: rgba(45, 45, 45, 0.4);
+}
+
+.zen-mode-toggle:hover {
+  transform: translateY(-2px);
+  background: var(--bg-card);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Zen Mode Active State */
+body.zen-mode {
+  overflow: hidden; /* Hide scrollbars */
+  background: var(--bg-body) !important;
+}
+
+body.zen-mode .sidebar,
+body.zen-mode .top-nav,
+body.zen-mode .right-panel,
+body.zen-mode .dashboard-bottom,
+body.zen-mode .floating-toolbar,
+body.zen-mode .footer,
+body.zen-mode .milo-section,
+body.zen-mode .focus-growth-section,
+body.zen-mode .dashboard-cards {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  display: none !important; /* completely remove from document flow */
+  transition: opacity 0.5s ease;
+}
+
+body.zen-mode .main-content {
+  margin-left: 0 !important; /* Override sidebar margin */
+  padding: 0 !important;
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  background: var(--bg-body) !important; 
+}
+
+body.zen-mode .dashboard {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body.zen-mode .dashboard-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 100 !important;
+  background: var(--bg-body) !important;
+  gap: 0 !important;
+}
+
+body.zen-mode .timer-section {
+  transform: scale(1.4) !important;
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.08);
+  margin: 0 !important;
+  z-index: 101 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  background: var(--bg-card); /* Add a solid background to hold the shadow cleanly */
+  border-radius: 40px; /* Smooth, completely rounded edges */
+  padding: 48px 40px 32px 40px; /* Breathing room inside the container */
+  gap: 16px; /* Decrease the gap slightly so items are tighter */
+}
+
+body.zen-mode .session-progress-tracker {
+  /* Pull the session progress up closer to the timer buttons */
+  margin-top: -8px !important;
+}
+
+/* Make timer smoothly return to normal when exiting */
+.timer-section {
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.btn-exit-zen {
+  position: fixed;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 12px 24px;
+  border-radius: 30px;
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.5s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body.zen-mode .btn-exit-zen {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.btn-exit-zen:hover {
+  background: var(--bg-muted);
 }
