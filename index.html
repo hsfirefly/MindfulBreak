@@ -12,6 +12,11 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500;600&display=swap"
     rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&family=Inter:wght@300;400;600&display=swap"
+    rel="stylesheet" />
 
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
@@ -1059,84 +1064,103 @@
        TO-DO PAGE — Mindful Intentions
        ============================================= -->
   <section class="page" id="page-todo" data-page="todo" role="main" aria-label="To-Do">
-    <div class="todo-page">
-      <!-- Header -->
-      <div class="todo-header">
-        <div class="todo-header__text">
-          <span class="todo-header__label">— DAILY RITUAL</span>
-          <h1 class="todo-header__title">Mindful<br>Intentions</h1>
-          <p class="todo-header__desc">Plant the seeds of today's focus. Nurture your tasks with presence and let your
-            productivity bloom naturally.</p>
+    <div class="todo2-page">
+      <header class="todo2-header">
+        <div class="todo2-header-left">
+          <div class="todo2-ritual-label">
+            <span class="todo2-ritual-line"></span>
+            <span class="todo2-ritual-text">Daily Ritual</span>
+          </div>
+          <h1 class="todo2-h1">Mindful Intentions</h1>
+          <p class="todo2-header-desc">
+            Plant the seeds of today's focus. Nurture your tasks with presence and let your productivity bloom
+            naturally.
+          </p>
         </div>
-        <div class="todo-header__visual">
-          <div class="todo-header__orb"></div>
-          <span class="todo-header__leaf"></span>
+        <div class="todo2-header-visual">
+          <div class="todo2-header-img-wrap">
+            <img class="todo2-header-img" alt="Close-up"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlMiNDR187DSdzXgskrP-TKaQLP02_wWXWz1eEd1alAqJSLbc9a9w94Jk8krVaQhnsPDKcNZI2T9vchCwQ700a_OICtQ8MYcSrE_lfl3t16Rbq4fqvCmGJPLHLgPiRSEKEW80qCRQdnghWKD5L-h9O71OEx8poGRLuIGmmi7wavdc2GP6s1ju2nSWt6vGIdcnRXqG-UDC2w9-h_h-0VipZLMz3wDlvIPMuBxv0xSRJBbr3rES6xgc4ZAy_ZDeR29EPSiLb5VHltVfH" />
+          </div>
+          <div class="todo2-header-badge">
+            <span class="material-symbols-outlined">spa</span>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <!-- Main Content Grid -->
-      <div class="todo-grid">
-        <!-- Left: Task Lists -->
-        <div class="todo-main">
-          <!-- Daily Focus Section -->
-          <div class="todo-section">
-            <div class="todo-section__header">
-              <h2 class="todo-section__title">Daily Focus</h2>
-              <span class="todo-section__count" id="todo-pending-count">0 TASKS REMAINING</span>
-            </div>
-            <button class="todo-plant-btn" id="todo-plant-btn">
-              Plant New Intention
+      <section class="todo2-grid">
+        <div class="todo2-col-left">
+          <div>
+            <h2 class="todo2-section-title">
+              Daily Focus
+              <span class="todo2-task-count" id="todo-pending-count">0 TASKS REMAINING</span>
+            </h2>
+            <button class="todo2-btn-plant" id="todo-plant-btn">
+              <span class="material-symbols-outlined">spa</span>
+              <span class="todo2-btn-plant-text">Plant New Intention</span>
             </button>
-            <ul class="todo-list" id="todo-daily-list">
+            <div class="todo2-task-list" id="todo-daily-list">
               <!-- JS-rendered active tasks -->
-            </ul>
+            </div>
           </div>
 
-          <!-- Future Growth Section -->
-          <div class="todo-section">
-            <h2 class="todo-section__title">Future Growth</h2>
-            <ul class="todo-list todo-list--future" id="todo-future-list">
+          <div class="todo2-future">
+            <h2 class="todo2-section-title" style="margin-bottom: 32px;">Future Growth</h2>
+            <div class="todo2-task-list" id="todo-future-list">
               <!-- JS-rendered completed tasks -->
-            </ul>
-          </div>
-        </div>
-
-        <!-- Right: Sidebar -->
-        <div class="todo-sidebar">
-          <!-- Mindful Integration Card -->
-          <div class="todo-integration-card">
-            <h3 class="todo-integration-card__title">Mindful Integration</h3>
-            <p class="todo-integration-card__desc">Elevate your tasks into ritual sessions. Linking a focus session
-              provides a structured environment for your intentions to flourish.</p>
-            <div class="todo-integration-card__img">
-              <img src="https://cdn.dribbble.com/userupload/42508154/file/original-29975e94565d44e6d3538fc0d3a6076c.gif"
-                alt="Mindful coffee" style="width: 100%; height: 100%; object-fit: cover;">
-            </div>
-          </div>
-
-          <!-- Today's Reflection -->
-          <div class="todo-reflection-card">
-            <span class="todo-reflection-card__label">TODAY'S REFLECTION</span>
-            <blockquote class="todo-reflection-card__quote" id="todo-reflection-quote">"The forest does not hurry, yet
-              everything is accomplished."</blockquote>
-            <div class="todo-reflection-card__source">
-              <span>🌿</span> Daily Wisdom
-            </div>
-          </div>
-
-          <!-- Stats -->
-          <div class="todo-stats">
-            <div class="todo-stat">
-              <span class="todo-stat__value" id="todo-stat-minutes">0</span>
-              <span class="todo-stat__label">FOCUS MINUTES</span>
-            </div>
-            <div class="todo-stat">
-              <span class="todo-stat__value" id="todo-stat-intentions">0</span>
-              <span class="todo-stat__label">INTENTIONS SET</span>
             </div>
           </div>
         </div>
-      </div>
+
+        <aside class="todo2-col-right">
+          <div class="todo2-integration">
+            <div class="todo2-integration-content">
+              <h3 class="todo2-integration-title">Mindful Integration</h3>
+              <p class="todo2-integration-desc">Elevate your tasks into ritual sessions. Linking a focus session
+                provides a structured environment for your intentions to flourish.</p>
+              <div class="todo2-integration-img-wrap">
+                <img class="todo2-integration-img"
+                  src="https://cdn.dribbble.com/userupload/42508154/file/original-29975e94565d44e6d3538fc0d3a6076c.gif"
+                  alt="Minimalist Workspace GIF" />
+              </div>
+              <button class="todo2-btn-start" onclick="document.querySelector('[data-nav=\'timer\']')?.click()">
+                <span class="material-symbols-outlined">center_focus_strong</span>
+                START FOCUS SESSION
+              </button>
+            </div>
+            <div class="todo2-integration-bg-icon">
+              <span class="material-symbols-outlined">eco</span>
+            </div>
+          </div>
+
+          <div class="todo2-reflection">
+            <span class="todo2-reflection-label">Today's Reflection</span>
+            <p class="todo2-reflection-quote" id="todo-reflection-quote">"The forest does not hurry, yet everything is
+              accomplished."</p>
+            <div class="todo2-reflection-footer">
+              <div class="todo2-reflection-icon-wrap">
+                <span class="material-symbols-outlined">self_improvement</span>
+              </div>
+              <span class="todo2-reflection-author">Daily Wisdom</span>
+            </div>
+          </div>
+
+          <div class="todo2-stats">
+            <div class="todo2-stat-card">
+              <span class="todo2-stat-num" id="todo-stat-minutes">0</span>
+              <span class="todo2-stat-label">Focus Minutes</span>
+            </div>
+            <div class="todo2-stat-card">
+              <span class="todo2-stat-num" id="todo-stat-intentions">0</span>
+              <span class="todo2-stat-label">Intentions Set</span>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <button class="todo2-fab" id="todo-fab-btn" title="New Intention">
+        <span class="material-symbols-outlined">add</span>
+      </button>
     </div>
   </section>
 

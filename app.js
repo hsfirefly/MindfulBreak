@@ -293,7 +293,7 @@ const TimerEngine = (() => {
             AppState.activeTaskId = null; // Clear if done or missing
             currentTaskEl.style.display = 'none';
           }
-        } catch(e) {
+        } catch (e) {
           currentTaskEl.style.display = 'none';
         }
       } else {
@@ -379,21 +379,21 @@ const TimerEngine = (() => {
 
     // Trigger Task Completion Modal
     if (completedMode === 'work' && AppState.activeTaskId) {
-       try {
-         const raw = localStorage.getItem('mindfulbreak_intentions');
-         const tasks = raw ? JSON.parse(raw) : [];
-         const task = tasks.find(t => t.id === AppState.activeTaskId);
-         if (task && !task.done) {
-             const modal = document.getElementById('task-completion-modal');
-             const nameEl = document.getElementById('completion-task-name');
-             if (modal && nameEl) {
-               nameEl.textContent = task.text;
-               modal.style.display = 'flex';
-               const btnDone = document.getElementById('btn-task-done');
-               if(btnDone) btnDone.dataset.taskId = task.id;
-             }
-         }
-       } catch(e) {}
+      try {
+        const raw = localStorage.getItem('mindfulbreak_intentions');
+        const tasks = raw ? JSON.parse(raw) : [];
+        const task = tasks.find(t => t.id === AppState.activeTaskId);
+        if (task && !task.done) {
+          const modal = document.getElementById('task-completion-modal');
+          const nameEl = document.getElementById('completion-task-name');
+          if (modal && nameEl) {
+            nameEl.textContent = task.text;
+            modal.style.display = 'flex';
+            const btnDone = document.getElementById('btn-task-done');
+            if (btnDone) btnDone.dataset.taskId = task.id;
+          }
+        }
+      } catch (e) { }
     }
   }
 
@@ -742,13 +742,13 @@ const AudioEngine = (() => {
   function playBreakStart() {
     if (!_enabled) return;
     _chime.currentTime = 0;
-    _chime.play().catch(e=>{});
+    _chime.play().catch(e => { });
   }
 
   function playSessionEnd() {
     if (!_enabled) return;
     _chime.currentTime = 0;
-    _chime.play().catch(e=>{});
+    _chime.play().catch(e => { });
   }
 
   /** Enable or disable all audio output */
@@ -2575,7 +2575,7 @@ const AmbienceMixer = (() => {
       audio.volume = 0;
       audio.play().catch(e => showToast("Audio required user interaction to play."));
       _nodes[type] = audio;
-      
+
       const targetVol = _getSliderValue(type);
       const fadeIn = setInterval(() => {
         if (audio.volume < targetVol - 0.05) {
@@ -2786,35 +2786,62 @@ const TodoPage = (() => {
     return div.innerHTML;
   }
 
-  function _renderItem(task, idx) {
-    const li = document.createElement('li');
-    li.className = 'todo-item' + (task.done ? ' done' : '');
+  function _renderItem(task, idx, isFuture = false) {
+    const el = document.createElement('div');
     
     // Check if it's the currently active task
     const isActive = (AppState.activeTaskId === task.id);
     
-    let focusBtnHtml = '';
-    if (!task.done && task.linkedSession) {
-      if (isActive) {
-        focusBtnHtml = `<span class="todo-item__active-badge" style="font-size:0.7rem; font-weight:700; color:var(--accent-teal); padding: 2px 8px; border-radius: 12px; background: rgba(56, 163, 165, 0.1);">ACTIVE</span>`;
-      } else {
-        focusBtnHtml = `<button class="todo-item__set-focus" data-id="${task.id}" style="font-size:0.7rem; font-weight:700; color:var(--text-muted); background:var(--bg-muted); border:none; padding:4px 8px; border-radius:12px; cursor:pointer;" title="Set as Current Focus">SET FOCUS</button>`;
-      }
-    }
-
-    li.innerHTML = `
-      <button class="todo-item__checkbox ${task.done ? 'checked' : ''}" data-idx="${idx}"></button>
-      <div class="todo-item__content">
-        <div class="todo-item__title">${_escapeHtml(task.text)}</div>
-        <div class="todo-item__meta" style="display:flex; align-items:center; gap:8px;">
-          <span class="todo-item__tag todo-item__tag--${task.category || 'light-focus'}">${CAT_LABELS[task.category] || 'Light Focus'}</span>
-          ${task.linkedSession ? '<span class="todo-item__session-link">● LINKED</span>' : ''}
-          ${focusBtnHtml}
+    if (isFuture) {
+      el.className = 'todo2-future-item';
+      el.innerHTML = `
+        <div class="todo2-future-left">
+          <span class="material-symbols-outlined todo2-future-icon">check_circle</span>
+          <span class="todo2-future-text" style="text-decoration: line-through;">${_escapeHtml(task.text)}</span>
         </div>
-      </div>
-      <button class="todo-item__delete" data-idx="${idx}" title="Delete">&times;</button>
-    `;
-    return li;
+        <div style="display:flex; align-items:center; gap:16px;">
+          <button class="todo2-future-delete-btn" data-idx="${idx}" title="Delete" style="background:none; border:none; color:var(--todo-outline-variant); cursor:pointer; font-size:24px; padding:0; display:flex; transition: color 0.2s;">&times;</button>
+          <span class="material-symbols-outlined todo2-drag-handle">drag_handle</span>
+        </div>
+      `;
+    } else {
+      el.className = 'todo2-item';
+      
+      let focusBtnHtml = '';
+      if (task.linkedSession) {
+        if (isActive) {
+          focusBtnHtml = `
+            <div class="todo2-linked-badge">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size:14px;">check_circle</span>
+              ACTIVE SESSION
+            </div>`;
+        } else {
+          focusBtnHtml = `
+            <button class="todo2-link-btn" data-id="${task.id}">
+              <span class="material-symbols-outlined" style="font-size:14px;">timer</span>
+              SET FOCUS
+            </button>`;
+        }
+      }
+
+      el.innerHTML = `
+        <div class="todo2-checkbox-container">
+          <input class="todo2-checkbox" type="checkbox" data-idx="${idx}" />
+        </div>
+        <div class="todo2-item-body">
+          <div class="todo2-item-header">
+            <h3 class="todo2-item-title">${_escapeHtml(task.text)}</h3>
+            <span class="todo2-tag todo2-tag--${task.category || 'light-focus'}">${CAT_LABELS[task.category] || 'Light Focus'}</span>
+          </div>
+          <p class="todo2-item-desc">A mindful step towards completing this intention.</p>
+          <div class="todo2-meta">
+            ${focusBtnHtml}
+          </div>
+        </div>
+        <button class="todo2-delete-btn" data-idx="${idx}" title="Delete">&times;</button>
+      `;
+    }
+    return el;
   }
 
   function render() {
@@ -2845,11 +2872,11 @@ const TodoPage = (() => {
     // Daily Focus list (active tasks)
     dailyList.innerHTML = '';
     if (activeTasks.length === 0) {
-      dailyList.innerHTML = '<li class="todo-empty">No active intentions. Plant a new seed to begin.</li>';
+      dailyList.innerHTML = '<div class="todo2-empty">No active intentions. Plant a new seed to begin.</div>';
     } else {
-      activeTasks.forEach((task, i) => {
+      activeTasks.forEach(task => {
         const realIdx = tasks.indexOf(task);
-        dailyList.appendChild(_renderItem(task, realIdx));
+        dailyList.appendChild(_renderItem(task, realIdx, false));
       });
     }
 
@@ -2857,11 +2884,11 @@ const TodoPage = (() => {
     if (futureList) {
       futureList.innerHTML = '';
       if (doneTasks.length === 0) {
-        futureList.innerHTML = '<li class="todo-empty">Completed intentions will appear here.</li>';
+        futureList.innerHTML = '<div class="todo2-empty">Completed intentions will appear here.</div>';
       } else {
         doneTasks.forEach(task => {
           const realIdx = tasks.indexOf(task);
-          futureList.appendChild(_renderItem(task, realIdx));
+          futureList.appendChild(_renderItem(task, realIdx, true));
         });
       }
     }
@@ -2891,24 +2918,23 @@ const TodoPage = (() => {
 
   function _addTask(text, category, linkedSession) {
     const tasks = _load();
-    const newTask = {
-      text,
-      category: category || 'light-focus',
-      linkedSession: !!linkedSession,
-      done: false,
-      id: Date.now(),
-      createdAt: new Date().toISOString()
-    };
-    tasks.push(newTask);
-    _save(tasks);
-
-    // Set as active if linked
-    if (newTask.linkedSession) {
-      AppState.activeTaskId = newTask.id;
-      // Trigger UI update to show it immediately on dashboard
-      setTimeout(() => TimerEngine.updateUI && TimerEngine.updateUI(), 50);
+    const newId = Date.now();
+    
+    // Auto-link to dashboard active task if requested
+    if (linkedSession) {
+      AppState.activeTaskId = newId;
+      TimerEngine.updateUI && TimerEngine.updateUI();
     }
-
+    
+    tasks.push({
+      id: newId,
+      text: text.trim(),
+      category: category || 'light-focus',
+      done: false,
+      createdAt: new Date().toISOString(),
+      linkedSession: linkedSession || false
+    });
+    _save(tasks);
     render();
   }
 
@@ -2936,6 +2962,9 @@ const TodoPage = (() => {
     const plantBtn = document.getElementById('todo-plant-btn');
     if (plantBtn) plantBtn.addEventListener('click', _openModal);
 
+    const fabBtn = document.getElementById('todo-fab-btn');
+    if (fabBtn) fabBtn.addEventListener('click', _openModal);
+
     // Modal close
     const closeBtn = document.getElementById('intention-modal-close');
     if (closeBtn) closeBtn.addEventListener('click', _closeModal);
@@ -2962,11 +2991,12 @@ const TodoPage = (() => {
     if (submitBtn) {
       submitBtn.addEventListener('click', () => {
         const input = document.getElementById('intention-input');
-        const text = input ? input.value.trim() : '';
-        if (!text) { if (input) input.focus(); return; }
+        if (!input || !input.value.trim()) return;
+        const text = input.value.trim();
         const activeCat = document.querySelector('.intention-cat.active');
         const category = activeCat ? activeCat.dataset.cat : 'light-focus';
         const linked = document.getElementById('intention-link-session');
+        
         _addTask(text, category, linked ? linked.checked : false);
         _closeModal();
         showToast('🌱 Intention planted!');
@@ -2988,10 +3018,10 @@ const TodoPage = (() => {
     [dailyList, futureList].forEach(list => {
       if (!list) return;
       list.addEventListener('click', (e) => {
-        const checkbox = e.target.closest('.todo-item__checkbox');
-        const deleteBtn = e.target.closest('.todo-item__delete');
-        const focusBtn = e.target.closest('.todo-item__set-focus');
-        
+        const checkbox = e.target.closest('.todo-item__checkbox, .todo2-checkbox');
+        const deleteBtn = e.target.closest('.todo-item__delete, .todo2-delete-btn, .todo2-future-delete-btn');
+        const focusBtn = e.target.closest('.todo-item__set-focus, .todo2-link-btn');
+
         if (checkbox) _toggleTask(parseInt(checkbox.dataset.idx));
         if (deleteBtn) _deleteTask(parseInt(deleteBtn.dataset.idx));
         if (focusBtn) {
@@ -3059,7 +3089,7 @@ const TaskCompletionController = (() => {
     const btnClose = document.getElementById('btn-close-completion-modal');
 
     function hide() {
-      if(modal) modal.style.display = 'none';
+      if (modal) modal.style.display = 'none';
       AppState.activeTaskId = null;
       TimerEngine.updateUI && TimerEngine.updateUI();
     }
@@ -3068,11 +3098,11 @@ const TaskCompletionController = (() => {
       btnDone.addEventListener('click', (e) => {
         const taskId = e.target.dataset.taskId;
         if (taskId) {
-           TodoPage.completeTaskById(taskId);
-           // Trigger a nice Milo interaction!
-           if (typeof MiloEngine !== 'undefined' && MiloEngine.triggerCelebration) {
-             MiloEngine.triggerCelebration();
-           }
+          TodoPage.completeTaskById(taskId);
+          // Trigger a nice Milo interaction!
+          if (typeof MiloEngine !== 'undefined' && MiloEngine.triggerCelebration) {
+            MiloEngine.triggerCelebration();
+          }
         }
         hide();
       });
